@@ -18,10 +18,14 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'nama',
+        'username',
         'email',
         'password',
+        'role',
+        'nip',
     ];
+
 
     /**
      * The attributes that should be hidden for serialization.
@@ -42,4 +46,10 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function skpPengajuan()
+    {
+        return $this->hasMany(SkpPengajuan::class);
+    }
+
 }
