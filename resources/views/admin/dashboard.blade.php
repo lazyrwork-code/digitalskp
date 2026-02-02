@@ -111,7 +111,7 @@
                 $btnLabel = 'Lihat Detail'; // Default label
                 $btnIcon = 'bi-eye';
                 $btnClass = 'btn-outline-primary';
-                $btnUrl = url('admin/skp/'.$skp->id); // Default URL
+                $btnUrl = url('skp/show/'.$skp->id); // Default URL
             @endphp
 
             @if($role == 'pegawai')
@@ -132,7 +132,9 @@
 
             @elseif($role == 'admin')
                 @if($statusKey == 'verifikasi')
-                    @php $btnLabel = 'Verifikasi SKP'; $btnIcon = 'bi-clipboard-check'; $btnClass = 'btn-outline-success'; @endphp
+                    @php $btnLabel = 'Verifikasi SKP'; $btnIcon = 'bi-clipboard-check'; $btnClass = 'btn-outline-success'
+                    ;$btnUrl = url('admin/skp/'.$skp->id); @endphp
+                    
                 @elseif($statusKey == 'perbaikan')
                     @php $btnLabel = 'Lihat Detail'; $btnIcon = 'bi-eye'; @endphp
                 @elseif($statusKey == 'menungguttd')
@@ -147,7 +149,7 @@
                         $btnLabel = 'Tanda Tangani'; 
                         $btnIcon = 'bi-pen'; 
                         $btnClass = 'btn-primary';
-                        $btnUrl = url('kepala/skp/ttd/'.$skp->id); // Sesuaikan route TTD kepala
+                        $btnUrl = url('kepala/skp/ttd/'.$skp->id); 
                     @endphp
                 @elseif($statusKey == 'selesai')
                     @php $btnLabel = 'Lihat SKP Final'; $btnIcon = 'bi-file-earmark-pdf'; $btnClass = 'btn-success'; @endphp

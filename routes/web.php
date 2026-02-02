@@ -47,7 +47,7 @@ Route::middleware('auth')->group(function () {
     // PEGAWAI
     // ======================
     Route::middleware('role:pegawai')->group(function () {
-        Route::get('/pegawai/dashboard', [DashboardController::class, 'index'])->name('pegawai.dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         
         // TAMBAHAN: Rute supaya pegawai bisa akses halaman edit pas status "Perbaikan"
         Route::get('/pegawai/skp/edit/{id}', [SkpPengajuanController::class, 'edit'])->name('skp.edit');
@@ -78,8 +78,13 @@ Route::middleware('auth')->group(function () {
         // TAMBAHAN: Rute buat Kepala liat dokumen dulu sebelum di-TTD (Halaman Review)
         Route::get('/skp/review/{id}', [VerifikasiTtdController::class, 'showReview'])->name('kepala.skp.review');
 
-        Route::post('/skp/{id}/ttd', [VerifikasiTtdController::class, 'store'])->name('skp.ttd');
+        // Route::post('/skp/{id}/ttd', [VerifikasiTtdController::class, 'store'])->name('skp.ttd');
 
+        // Route untuk menampilkan HALAMAN tanda tangan (GET)
+        Route::get('/skp/{id}/ttd', [VerifikasiTtdController::class, 'showTtd'])->name('kepala.skp.ttd');
+
+        // Route untuk PROSES tanda tangan (POST) - sudah ada di kode kamu
+        Route::post('/skp/{id}/ttd', [VerifikasiTtdController::class, 'store'])->name('skp.ttd');
         Route::get('/repository', [RepositorySkpController::class, 'index'])
             ->name('kepala.repository');
     });

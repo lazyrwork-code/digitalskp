@@ -11,5 +11,5 @@ class SkpDokumen extends Model
     // Paksa Laravel menggunakan nama tabel yang benar (tanpa 's')
     protected $table = 'skp_dokumen'; 
 
-    protected $fillable = ['skp_id', 'nama_file', 'tipe', 'url','catatan'];
+    protected $fillable = ['skp_id', 'nama_file','link_pendukung', 'tipe', 'url','catatan'];
 }

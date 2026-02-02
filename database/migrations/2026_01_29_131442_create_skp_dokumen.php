@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('skp_id')->constrained('skp_pengajuan')->cascadeOnDelete();
             $table->string('nama_file');
             $table->enum('tipe', ['pdf']);
+            $table->string('link_pendukung');
             $table->string('url');
             $table->string('Catatan');
             $table->timestamps();

@@ -17,7 +17,8 @@ class SkpPengajuanController extends Controller
         $tahunDipilih = $request->query('tahun', date('Y'));
 
         $query = SkpPengajuan::with('user')
-                    ->where('tahun', $tahunDipilih);
+                    ->where('tahun', $tahunDipilih)
+                    ->where('status', 'selesai');
 
         if (auth()->user()->role === 'pegawai') {
             $query->where('user_id', auth()->id());

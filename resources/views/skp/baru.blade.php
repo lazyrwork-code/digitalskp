@@ -145,6 +145,7 @@ function skpUpload() {
         init() {
             // Cek apakah ada data lama
             const savedData = localStorage.getItem('skp_form_cache');
+            console.log(savedData);
             
             if (savedData) {
                 this.dokumenList = JSON.parse(savedData);
@@ -202,15 +203,11 @@ function skpUpload() {
         },
 
         submitForm(event) {
-            // 1. Kunci Watcher agar tidak menulis ke localStorage lagi
             this.isSubmitting = true; 
-            
-            // 2. Hapus fisik cache-nya
             localStorage.removeItem('skp_form_cache');
-            
-            // 3. (Opsional) Kosongkan UI agar user tahu proses sedang berjalan
-            // Tapi biarkan form mengirim data asli sebelum halaman refresh
-            return true; 
+    
+            console.log(localStorage.removeItem('skp_form_cache'))
+            return false; 
         },
 
         canSubmit() {

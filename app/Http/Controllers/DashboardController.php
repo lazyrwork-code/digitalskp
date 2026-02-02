@@ -50,7 +50,7 @@ class DashboardController extends Controller
             'selesai'    => $allData->where('status', 'selesai')->count(),
         ];
 
-        $view = $user->role === 'admin' ? 'admin.dashboard' : ($user->role === 'kepala_rm' ? 'kepala.dashboard' : 'dashboard');
+        $view = $user->role === 'admin' ? 'admin.dashboard' : ($user->role === 'kepala' ? 'kepala.dashboard' : 'dashboard');
 
         return view($view, compact('counts', 'allData', 'bulanDipilih', 'tahunDipilih', 'bulanIndo'));
     }

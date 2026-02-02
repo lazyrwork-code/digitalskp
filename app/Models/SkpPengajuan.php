@@ -15,6 +15,10 @@ class SkpPengajuan extends Model
         'pdf_file','pdf_ttdfinal'
     ];
 
+    protected $casts = [
+        'tanggal_pengajuan' => 'date',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
