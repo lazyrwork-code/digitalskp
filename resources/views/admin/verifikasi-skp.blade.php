@@ -66,8 +66,8 @@
                                 <input type="text" class="form-control form-control-sm" value="{{ $doc->nama_file }}" disabled />
                             </td>
                             <td class="text-center">
-                                @if($skp->link_bukti_dukung)
-                                    <a href="{{ $skp->link_bukti_dukung }}" target="_blank" class="btn btn-info btn-sm text-white">
+                                @if($doc->link_pendukung)
+                                    <a href="{{ $doc->link_pendukung }}" target="_blank" class="btn btn-info btn-sm text-white">
                                         <i class="bi bi-link-45deg"></i>
                                     </a>
                                 @else

@@ -76,15 +76,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('kepala.dashboard');
 
         // TAMBAHAN: Rute buat Kepala liat dokumen dulu sebelum di-TTD (Halaman Review)
-        Route::get('/skp/review/{id}', [VerifikasiTtdController::class, 'showReview'])->name('kepala.skp.review');
+        Route::get('/skp/ttd/get/{id}', [VerifikasiTtdController::class, 'getTTD'])->name('skp.getTTD');
+        Route::post('/ttd/{doc}', [VerifikasiTtdController::class, 'simpan'])->name('skp.saveTTD');
 
-        // Route::post('/skp/{id}/ttd', [VerifikasiTtdController::class, 'store'])->name('skp.ttd');
+        Route::get('/skp/detail/{id}', [VerifikasiTtdController::class, 'show'])->name('skp.show.detail');
 
         // Route untuk menampilkan HALAMAN tanda tangan (GET)
         Route::get('/skp/{id}/ttd', [VerifikasiTtdController::class, 'showTtd'])->name('kepala.skp.ttd');
 
         // Route untuk PROSES tanda tangan (POST) - sudah ada di kode kamu
-        Route::post('/skp/{id}/ttd', [VerifikasiTtdController::class, 'store'])->name('skp.ttd');
         Route::get('/repository', [RepositorySkpController::class, 'index'])
             ->name('kepala.repository');
     });

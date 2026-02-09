@@ -114,9 +114,17 @@
                             </span>
                         </td>
                         <td class="text-end">
-                            <a class="btn btn-outline-success btn-sm rounded-pill" href="{{ route('skp.show', $item->id) }}">
-                                <i class="bi bi-search"></i> Detail
-                            </a>
+                          @if($item->status === 'perbaikan')
+                              <a class="btn btn-warning btn-sm rounded-pill"
+                                href="{{ route('skp.edit', $item->id) }}">
+                                  <i class="bi bi-edit"></i> Perbaiki SKP
+                              </a>
+                          @else
+                              <a class="btn btn-success btn-sm rounded-pill"
+                                href="{{ route('skp.show', $item->id) }}">
+                                  <i class="bi bi-search"></i> Detail SKP
+                              </a>
+                          @endif
                         </td>
                     </tr>
                 @empty

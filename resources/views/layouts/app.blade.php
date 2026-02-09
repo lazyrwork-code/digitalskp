@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap-icons.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/app.css') }}">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 </head>
 <body>
     <div class="app-wrapper">

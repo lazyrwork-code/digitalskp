@@ -7,7 +7,12 @@
     <h3 class="fw-bold mb-4">Ajukan SKP Baru</h3>
 
     <!-- FORM HEADER -->
-    <form action="{{ route('skp.store') }}" method="POST" enctype="multipart/form-data" @submit="submitForm($event)">
+    <form action="{{ route('skp.store') }}" 
+      method="POST" 
+      enctype="multipart/form-data"
+      x-data="skpUpload()"
+      @submit="submitForm">
+
     @csrf
         <div class="bg-white p-4 rounded-4 mb-4">
             <div class="row g-4">
@@ -207,7 +212,6 @@ function skpUpload() {
             localStorage.removeItem('skp_form_cache');
     
             console.log(localStorage.removeItem('skp_form_cache'))
-            return false; 
         },
 
         canSubmit() {

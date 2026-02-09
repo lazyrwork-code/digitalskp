@@ -61,41 +61,41 @@ class DashboardController extends Controller
         return view('admin.verifikasi-skp', compact('skp', 'dokumen'));
     }
 
-public function updateStatus(Request $request, $id)
-{
-    $request->validate([
-        'status_baru' => 'required|in:perbaikan,menungguttd',
-        'koreksi' => 'nullable|array',
-    ]);
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status_baru' => 'required|in:perbaikan,menungguttd',
+            'koreksi' => 'nullable|array',
+        ]);
 
-    // 1. Update status utama di tabel skp_pengajuan
-    $skp = SkpPengajuan::findOrFail($id);
-    $skp->status = $request->status_baru;
-    $skp->save();
+        // 1. Update status utama di tabel skp_pengajuan
+        $skp = SkpPengajuan::findOrFail($id);
+        $skp->status = $request->status_baru;
+        $skp->save();
 
-    // 2. Jika statusnya 'perbaikan', simpan alasan ke masing-masing dokumen
-    if ($request->status_baru == 'perbaikan' && $request->has('koreksi')) {
-        foreach ($request->koreksi as $docId => $pesan) {
-            if (!empty($pesan)) {
-                $dokumen = SkpDokumen::find($docId);
-                if ($dokumen) {
-                    $dokumen->update([
-                        'catatan' => $pesan // Sudah benar pakai 'catatan'
-                    ]);
+        // 2. Jika statusnya 'perbaikan', simpan alasan ke masing-masing dokumen
+        if ($request->status_baru == 'perbaikan' && $request->has('koreksi')) {
+            foreach ($request->koreksi as $docId => $pesan) {
+                if (!empty($pesan)) {
+                    $dokumen = SkpDokumen::find($docId);
+                    if ($dokumen) {
+                        $dokumen->update([
+                            'catatan' => $pesan // Sudah benar pakai 'catatan'
+                        ]);
+                    }
                 }
             }
         }
+
+        // 3. PERBAIKAN DI SINI: Ganti 'catatan_koreksi' menjadi 'catatan'
+        if ($request->status_baru == 'menungguttd') {
+            SkpDokumen::where('skp_id', $id)->update(['catatan' => null]);
+        }
+
+        $pesanFlash = ($request->status_baru == 'perbaikan') 
+            ? 'SKP dikembalikan. Catatan koreksi telah dikirim ke tiap dokumen.' 
+            : 'SKP berhasil disetujui.';
+
+        return redirect()->route('admin.dashboard')->with('success', $pesanFlash);
     }
-
-    // 3. PERBAIKAN DI SINI: Ganti 'catatan_koreksi' menjadi 'catatan'
-    if ($request->status_baru == 'menungguttd') {
-        SkpDokumen::where('skp_id', $id)->update(['catatan' => null]);
-    }
-
-    $pesanFlash = ($request->status_baru == 'perbaikan') 
-        ? 'SKP dikembalikan. Catatan koreksi telah dikirim ke tiap dokumen.' 
-        : 'SKP berhasil disetujui.';
-
-    return redirect()->route('admin.dashboard')->with('success', $pesanFlash);
-}
 }

@@ -69,7 +69,7 @@
                             <td>{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d-m-Y') }}</td>
                             <td><span class="badge-status badge-ttd">Menunggu TTD</span></td>
                             <td class="text-end">
-                                <a class="btn btn-outline-success btn-sm" href="{{ route('skp.show', $item->id) }}">
+                                <a class="btn btn-outline-success btn-sm" href="{{ route('skp.show.detail', $item->id) }}">
                                     <i class="bi bi-qr-code"></i> Tanda Tangani
                                 </a>
                             </td>

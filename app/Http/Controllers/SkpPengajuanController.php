@@ -59,10 +59,8 @@ class SkpPengajuanController extends Controller
     }
 
     // SIMPAN FINAL KE DATABASE
-    public function store(Request $request)
+   public function store(Request $request)
     {
-        // Hapus dd() jika ada
-        
         $request->validate([
             'tanggal_pengajuan' => 'required|date',
             'bulan'             => 'required',
@@ -73,13 +71,15 @@ class SkpPengajuanController extends Controller
 
         DB::beginTransaction();
         try {
-            // AMBIL DATA DARI DOKUMEN PERTAMA UNTUK HEADER
-            // Kita pastikan ada isinya, kalau kosong kasih string "Tanpa Judul"
-            $judulHeader = $request->dokumen[0]['judul_laporan'] ?? 'Tanpa Judul';
-            $linkHeader  = $request->dokumen[0]['link_bukti_dukung'] ?? '-';
-            $pdfUtama    = isset($request->dokumen[0]['path']) ? 'skp_files/' . basename($request->dokumen[0]['path']) : null;
 
-            // GUNAKAN METODE MANUAL (TIDAK PAKAI CREATE) UNTUK BYPASS FILLABLE JIKA PERLU
+            // ===== HEADER AMBIL DARI DOKUMEN PERTAMA =====
+            $dokumenPertama = $request->dokumen[0] ?? [];
+
+            $judulHeader = $dokumenPertama['judul_laporan'] ?? 'Tanpa Judul';
+            $pdfUtama    = isset($dokumenPertama['path'])
+                ? 'skp_files/' . basename($dokumenPertama['path'])
+                : null;
+
             $skp = new \App\Models\SkpPengajuan();
             $skp->user_id = auth()->id();
             $skp->unit = $request->unit;
@@ -87,27 +87,28 @@ class SkpPengajuanController extends Controller
             $skp->tahun = $request->tahun;
             $skp->tanggal_pengajuan = $request->tanggal_pengajuan;
             $skp->status = 'verifikasi';
-            $skp->judul_laporan = $judulHeader; // PASTIKAN NAMA KOLOM DI DB SAMA
-            $skp->link_bukti_dukung = $linkHeader;
+            $link_bukti_dukung  = $request->dokumen[0]['link_bukti_dukung'] ?? '-';
+            $skp->judul_laporan = $judulHeader;
             $skp->pdf_file = $pdfUtama;
-            
-            // Simpan header dulu
             $skp->save();
 
-            // LOOPING DOKUMEN DETAIL
+            // ===== DETAIL DOKUMEN =====
             foreach ($request->dokumen as $item) {
+
                 if (!empty($item['path'])) {
+
                     $oldPath = $item['path'];
                     $newPath = 'skp_files/' . basename($oldPath);
-                    
+
                     if (Storage::disk('public')->exists($oldPath)) {
+
                         Storage::disk('public')->makeDirectory('skp_files');
                         Storage::disk('public')->move($oldPath, $newPath);
 
-                        // Simpan ke detail
                         $dokumen = new \App\Models\SkpDokumen();
                         $dokumen->skp_id = $skp->id;
-                        $dokumen->nama_file = $item['nama'];
+                        $dokumen->nama_file = $item['nama'] ?? 'Tanpa Nama';
+                        $dokumen->link_pendukung = $item['link_bukti_dukung'] ?? null;
                         $dokumen->tipe = 'pdf';
                         $dokumen->url = $newPath;
                         $dokumen->save();
@@ -120,10 +121,10 @@ class SkpPengajuanController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            // Pakai dd() di sini buat liat error aslinya kalau gagal lagi
             dd("Gagal simpan: " . $e->getMessage());
         }
     }
+
 
     // DETAIL
     public function show($id)
@@ -131,5 +132,62 @@ class SkpPengajuanController extends Controller
         // Pastikan relasi 'dokumen' sudah ada di Model SkpPengajuan
         $skp = SkpPengajuan::with(['dokumen','user'])->findOrFail($id);
         return view('skp.show', compact('skp'));
+    }
+
+    public function edit($id){
+        $skp = SkpPengajuan::with(['dokumen','user'])->findOrFail($id);
+        return view('skp.perbaikan', compact('skp'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $skp = SkpPengajuan::with('dokumen')->findOrFail($id);
+        
+        $request->validate([
+            'judul_laporan.*' => 'nullable|string|max:255',
+            'link_pendukung.*' => 'nullable|string|max:255',
+            'dokumen'          => 'nullable|array',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            foreach ($skp->dokumen as $doc) {
+                // Update metadata
+                
+                if (isset($request->judul_laporan[$doc->id])) {
+                    $doc->nama_file = $request->judul_laporan[$doc->id];
+                }
+                if (isset($request->link_pendukung[$doc->id])) {
+                    $doc->link_pendukung = $request->link_pendukung[$doc->id];
+                }
+
+                if (isset($request->dokumen[$doc->id]['path']) && !empty($request->dokumen[$doc->id]['path'])) {
+                    $tempPath = $request->dokumen[$doc->id]['path'];
+                    $fileName = time() . '_' . basename($tempPath);
+                    $newPath  = 'skp_files/' . $fileName;
+
+                    if (Storage::disk('public')->exists($tempPath)) {
+                        if ($doc->url && Storage::disk('public')->exists($doc->url)) {
+                            Storage::disk('public')->delete($doc->url);
+                        }
+                        Storage::disk('public')->move($tempPath, $newPath);
+                        $doc->url = $newPath;
+                        // Kalo dibutuhin
+                        // $doc->catatan = null;
+                    }
+                }
+                $doc->save();
+            }
+            $skp->status = 'verifikasi'; 
+            $skp->save();
+            DB::commit();
+            return redirect()
+                ->route('redirect.role')
+                ->with('success', 'Perbaikan SKP berhasil dikirim, status: Menunggu TTD');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal update: ' . $e->getMessage());
+        }
     }
 }
