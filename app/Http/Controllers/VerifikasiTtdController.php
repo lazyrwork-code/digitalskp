@@ -43,77 +43,141 @@ class VerifikasiTtdController extends Controller
 public function simpan(Request $request, $docId)
 {
     $request->validate([
-        'pos_x' => 'required|numeric',
-        'pos_y' => 'required|numeric'
+        'positions' => 'required|array'
     ]);
 
     try {
+
         $dokumen = SkpDokumen::findOrFail($docId);
+
         $originalPath = storage_path('app/public/' . $dokumen->url);
-        
+
         if (!file_exists($originalPath)) {
-            return response()->json(['success' => false, 'message' => 'File tidak ditemukan']);
+            return response()->json([
+                'success' => false,
+                'message' => 'File tidak ditemukan'
+            ]);
         }
 
-        // 1. Generate QR Code
-        $qrText = "ID: " . $docId . " | TTD: " . auth()->user()->nama;
-        $qr = \Endroid\QrCode\Builder\Builder::create()
-            ->data($qrText)
-            ->size(150)
-            ->build();
-
-        $tempDir = storage_path('app/public/temp_skp');
-        if (!file_exists($tempDir)) mkdir($tempDir, 0755, true);
-        
-        $qrTempPath = $tempDir . '/qr_' . $docId . '.png';
-        file_put_contents($qrTempPath, $qr->getString());
-
-        // 2. Proses PDF
+        /*
+        =====================
+        LOAD PDF
+        =====================
+        */
         $pdf = new \setasign\Fpdi\Fpdi();
         $pageCount = $pdf->setSourceFile($originalPath);
 
+        /*
+        =====================
+        SIAPKAN TEMP QR
+        =====================
+        */
+        $tempDir = storage_path('app/public/temp_skp');
+        if (!file_exists($tempDir)) mkdir($tempDir, 0755, true);
+
+        /*
+        =====================
+        LOOP HALAMAN PDF
+        =====================
+        */
         for ($i = 1; $i <= $pageCount; $i++) {
+
             $tpl = $pdf->importPage($i);
             $size = $pdf->getTemplateSize($tpl);
+
             $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
             $pdf->useTemplate($tpl);
 
-            // 3. TEMPEL QR HANYA DI HALAMAN TERAKHIR
-            if ($i == $pageCount) {
-                // Konversi Pixel ke MM (Standard 96 DPI)
-                $ratio = 25.4 / 96;
+            /*
+            =====================
+            CEK SEMUA POSISI QR
+            =====================
+            */
+            foreach ($request->positions as $index => $pos) {
 
-                // FIX MASALAH RANDOM: 
-                // Kita harus 'mengurangi' koordinat Y jika user scroll ke bawah 
-                // Tapi karena di frontend kita pakai getBoundingClientRect relatif terhadap container,
-                // kita harus pastikan tingginya pas dengan halaman terakhir.
-                
-                $posX_mm = $request->pos_x * $ratio;
-                $posY_mm = $request->pos_y * $ratio;
+                $targetPage = $pos['page'];
 
-                // Ukuran QR di PDF (30mm x 30mm)
-                $qrSize = 30;
+                // Support "last"
+                if ($targetPage === "last") {
+                    $targetPage = $pageCount;
+                }
 
-                $pdf->Image($qrTempPath, $posX_mm, $posY_mm, $qrSize, $qrSize);
+                if ($targetPage == $i) {
+
+                    /*
+                    =====================
+                    GENERATE QR
+                    =====================
+                    */
+                    $qrText = "ID: " . $docId . " | TTD: " . auth()->user()->nama;
+
+                    $qr = \Endroid\QrCode\Builder\Builder::create()
+                        ->data($qrText)
+                        ->size(150)
+                        ->build();
+
+                    $qrTempPath = $tempDir . "/qr_{$docId}_{$index}.png";
+
+                    file_put_contents($qrTempPath, $qr->getString());
+
+                    /*
+                    =====================
+                    KONVERSI PERSEN KE PDF COORDINATE
+                    =====================
+                    */
+                    $pageWidth = $size['width'];
+                    $pageHeight = $size['height'];
+
+                    $qrWidth = 30; // mm
+                    $qrHeight = 30; // mm
+
+                    $posX = $pos['x'] * $pageWidth;
+                    $posY = $pos['y'] * $pageHeight;
+
+                    /*
+                    =====================
+                    TARUH QR
+                    =====================
+                    */
+                    $pdf->Image($qrTempPath, $posX, $posY, $qrWidth, $qrHeight);
+
+                    if (file_exists($qrTempPath)) unlink($qrTempPath);
+                }
             }
         }
 
-        // 4. Simpan
+        /*
+        =====================
+        SIMPAN FILE SIGNED
+        =====================
+        */
         $newFileName = 'ttd/skp_doc_' . $docId . '_signed.pdf';
-        \Illuminate\Support\Facades\Storage::put('public/' . $newFileName, $pdf->Output('S'));
 
-        // 5. Update Database
-        $dokumen->update(['url' => $newFileName]);
+        \Storage::put(
+            'public/' . $newFileName,
+            $pdf->Output('S')
+        );
 
-        if (file_exists($qrTempPath)) unlink($qrTempPath);
+        /*
+        =====================
+        UPDATE DATABASE
+        =====================
+        */
+        $dokumen->update([
+            'signed_url' => $newFileName
+        ]);
 
         return response()->json([
             'success' => true,
-            'new_url' => asset('storage/' . $newFileName) . '?v=' . time()
+            'new_url' => asset('storage/' . $newFileName)
         ]);
 
     } catch (\Exception $e) {
-        return response()->json(['success' => false, 'message' => $e->getMessage()]);
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
     }
 }
 

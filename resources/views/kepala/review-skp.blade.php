@@ -139,35 +139,20 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
-            <div class="modal-body">
-
-                <div id="pdfContainer"
-                     style="position:relative;width:100%;height:600px;border:1px solid #ccc">
-
-                    <!-- PDF VIEW -->
-                    <iframe id="pdfView"
-                            style="width:100%;height:100%;border:none;">
-                    </iframe>
-
-                    <!-- QR DRAG -->
+           <div class="modal-body">
+                <div id="pdfViewer"
+                    style="position:relative;width:100%;height:600px;border:1px solid #ccc;overflow:auto;">
+                    <div id="pdfPages"></div>
                     <div id="qrDrag"
-                        style="position:absolute;top:100px;left:100px;cursor:move;text-align:center;background:white;padding:6px;border-radius:6px;">
-
+                        style="position:absolute;top:100px;left:100px;cursor:move;text-align:center;background:white;padding:6px;border-radius:6px;z-index:10;">
                         <div id="qrCanvas"></div>
-
                         <div style="font-size:12px;font-weight:bold;margin-top:4px;">
                             {{ auth()->user()->nama }}
                         </div>
-
-                        <div style="font-size:11px;">
-                            {{ auth()->user()->role }}
-                        </div>
-
                     </div>
-
                 </div>
-
             </div>
+
 
             <div class="modal-footer">
                 <button id="btnSimpanTTD" class="btn btn-success">
@@ -189,41 +174,81 @@ let kepalaNama = @json(auth()->user()->nama);
 
 const modalTTD = document.getElementById('modalTTD');
 const qrDrag = document.getElementById("qrDrag");
-const iframe = document.getElementById("pdfView");
+const viewer = document.getElementById("pdfViewer");
+const pdfPages = document.getElementById("pdfPages");
 
-if (!modalTTD) return;
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
 
-
-/* =============================
+/* =====================
    BUKA MODAL
-============================= */
+===================== */
 modalTTD.addEventListener('show.bs.modal', function (event) {
 
     let button = event.relatedTarget;
-
     currentFile = button.getAttribute("data-file");
     currentDocId = button.getAttribute("data-doc");
 
 });
 
-
-/* =============================
+/* =====================
    MODAL TERBUKA
-============================= */
+===================== */
 modalTTD.addEventListener('shown.bs.modal', function () {
 
-    iframe.src = "";
-    iframe.src = currentFile + "?v=" + Date.now();
+    loadPDF(currentFile);
 
     setTimeout(() => {
         generateQR();
-    }, 200);
+        qrDrag.style.left = "100px";
+        qrDrag.style.top  = "100px";
+    }, 300);
+
 });
 
+/* =====================
+   LOAD PDF VIA PDF.js
+===================== */
+function loadPDF(url) {
 
-/* =============================
+    pdfPages.innerHTML = "";
+
+    pdfjsLib.getDocument(url).promise.then(function(pdf) {
+
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+
+            pdf.getPage(pageNum).then(function(page) {
+
+                let scale = 1.3;
+                let viewport = page.getViewport({ scale });
+
+                let canvas = document.createElement("canvas");
+                let context = canvas.getContext("2d");
+
+                canvas.height = viewport.height;
+                canvas.width  = viewport.width;
+
+                canvas.style.display = "block";
+                canvas.style.margin  = "0 auto 20px";
+
+                pdfPages.appendChild(canvas);
+
+                page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                });
+
+            });
+
+        }
+
+    });
+
+}
+
+/* =====================
    GENERATE QR
-============================= */
+===================== */
 function generateQR() {
 
     let qrCanvas = document.getElementById("qrCanvas");
@@ -236,65 +261,58 @@ function generateQR() {
         width: 100,
         height: 100
     });
+
 }
 
+/* =====================
+   DRAG STABIL
+===================== */
+let offsetX = 0;
+let offsetY = 0;
 
-/* =============================
-   DRAG QR
-============================= */
-let isDragging = false;
-let startX, startY;
-let initialLeft, initialTop;
+qrDrag.addEventListener("pointerdown", (e) => {
 
-qrDrag.addEventListener("mousedown", function(e){
+    qrDrag.setPointerCapture(e.pointerId);
 
-    isDragging = true;
-
-    startX = e.clientX;
-    startY = e.clientY;
-
-    initialLeft = qrDrag.offsetLeft;
-    initialTop = qrDrag.offsetTop;
+    offsetX = e.clientX - qrDrag.offsetLeft;
+    offsetY = e.clientY - qrDrag.offsetTop;
 
 });
 
-document.addEventListener("mousemove", function(e){
+qrDrag.addEventListener("pointermove", (e) => {
 
-    if(!isDragging) return;
+    if (!qrDrag.hasPointerCapture(e.pointerId)) return;
 
-    let dx = e.clientX - startX;
-    let dy = e.clientY - startY;
+    let rect = viewer.getBoundingClientRect();
 
-    qrDrag.style.left = (initialLeft + dx) + "px";
-    qrDrag.style.top = (initialTop + dy) + "px";
+    let newX = e.clientX - rect.left - offsetX;
+    let newY = e.clientY - rect.top  - offsetY;
+
+    let maxX = viewer.clientWidth - qrDrag.clientWidth;
+    let maxY = viewer.scrollHeight - qrDrag.clientHeight;
+
+    newX = Math.max(0, Math.min(newX, maxX));
+    newY = Math.max(0, Math.min(newY, maxY));
+
+    qrDrag.style.left = newX + "px";
+    qrDrag.style.top  = newY + "px";
 
 });
 
-document.addEventListener("mouseup", function(){
-    isDragging = false;
+qrDrag.addEventListener("pointerup", (e) => {
+    qrDrag.releasePointerCapture(e.pointerId);
 });
 
+/* =====================
+   SIMPAN POSISI %
+===================== */
 document.getElementById("btnSimpanTTD").addEventListener("click", function() {
+
     const btn = this;
     btn.disabled = true;
 
-    const container = document.getElementById("pdfContainer");
-    const qr = document.getElementById("qrDrag");
-
-    const containerRect = container.getBoundingClientRect();
-    const qrRect = qr.getBoundingClientRect();
-
-    // Posisi X relatif terhadap lebar kontainer
-    let posX = qrRect.left - containerRect.left;
-    
-    // POSISI Y RELATIF (PENTING!)
-    // Kita ambil posisi Y relatif terhadap kotak preview yang terlihat di layar (viewport modal)
-    // Bukan relatif terhadap seluruh isi PDF yang di-scroll.
-    let posY = qrRect.top - containerRect.top;
-
-    // Tambahan proteksi: pastikan tidak negatif
-    posX = Math.max(0, posX);
-    posY = Math.max(0, posY);
+    let posX = qrDrag.offsetLeft / viewer.clientWidth;
+    let posY = qrDrag.offsetTop  / viewer.scrollHeight;
 
     fetch(`/kepala/ttd/${currentDocId}`, {
         method: "POST",
@@ -303,20 +321,26 @@ document.getElementById("btnSimpanTTD").addEventListener("click", function() {
             "X-CSRF-TOKEN": "{{ csrf_token() }}"
         },
         body: JSON.stringify({
-            pos_x: posX,
-            pos_y: posY
+            positions: [{
+                page: "last",
+                x: posX,
+                y: posY
+            }]
         })
     })
     .then(res => res.json())
     .then(data => {
+
         if (data.success) {
             alert("Berhasil!");
             location.reload();
         } else {
-            alert("Gagal: " + data.message);
+            alert("Gagal");
             btn.disabled = false;
         }
+
     });
+
 });
 
 });
