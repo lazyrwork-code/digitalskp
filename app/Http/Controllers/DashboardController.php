@@ -31,7 +31,7 @@ class DashboardController extends Controller
         // 2. Ambil data 'selesai' HANYA sesuai bulan terpilih
         $allData = (clone $baseQuery)->with('user')
             ->where(function($q) use ($bulanDipilih, $tahunDipilih) {
-                $q->whereIn('status', ['verifikasi', 'perbaikan', 'menungguttd'])
+                $q->whereIn('status', ['verifikasi', 'perbaikan', 'menungguttd','selesai'])
                 ->orWhere(function($sq) use ($bulanDipilih, $tahunDipilih) {
                     $sq->where('status', 'selesai')
                         ->where('bulan', $bulanDipilih)

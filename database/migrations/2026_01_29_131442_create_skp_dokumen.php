@@ -18,7 +18,9 @@ return new class extends Migration
             $table->enum('tipe', ['pdf']);
             $table->string('link_pendukung');
             $table->string('url');
+            $table->string('url_signed');
             $table->string('catatan');
+            $table->boolean('isttd')->default(0);;
             $table->timestamps();
         });
 

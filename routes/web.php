@@ -62,8 +62,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/skp/{id}', [DashboardController::class, 'show'])->name('admin.skp.show');
         Route::put('/skp/{id}/update-status', [DashboardController::class, 'updateStatus'])->name('admin.skp.update-status');
 
-        Route::get('/skp/verifikasi', [SkpPengajuanController::class, 'index'])
-            ->name('admin.skp.verifikasi');
+        Route::get('/skp/verifikasi', [SkpPengajuanController::class, 'index'])->name('admin.skp.verifikasi');
 
         Route::post('/skp/{id}/verifikasi', [SkpVerifikasiController::class, 'verifikasi']);
         Route::post('/skp/{id}/perbaikan', [SkpVerifikasiController::class, 'perbaikan']);
@@ -78,6 +77,7 @@ Route::middleware('auth')->group(function () {
         // TAMBAHAN: Rute buat Kepala liat dokumen dulu sebelum di-TTD (Halaman Review)
         Route::get('/skp/ttd/get/{id}', [VerifikasiTtdController::class, 'getTTD'])->name('skp.getTTD');
         Route::post('/ttd/{doc}', [VerifikasiTtdController::class, 'simpan'])->name('skp.saveTTD');
+        Route::put('/skp/{id}/update-status', [VerifikasiTtdController::class, 'updateStatus'])->name('kepala.skp.update-status');
 
         Route::get('/skp/detail/{id}', [VerifikasiTtdController::class, 'show'])->name('skp.show.detail');
 

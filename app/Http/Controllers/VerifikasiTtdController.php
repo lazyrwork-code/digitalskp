@@ -40,144 +40,230 @@ class VerifikasiTtdController extends Controller
 
         return response()->json($ttd);
     }
-public function simpan(Request $request, $docId)
-{
-    $request->validate([
-        'positions' => 'required|array'
-    ]);
+    public function simpan(Request $request, $docId)
+    {
+        $request->validate([
+            'positions' => 'required|array'
+        ]);
 
-    try {
+        try {
 
-        $dokumen = SkpDokumen::findOrFail($docId);
+            $dokumen = SkpDokumen::findOrFail($docId);
+            $originalPath = storage_path('app/public/' . $dokumen->url);
 
-        $originalPath = storage_path('app/public/' . $dokumen->url);
-
-        if (!file_exists($originalPath)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'File tidak ditemukan'
-            ]);
-        }
-
-        /*
-        =====================
-        LOAD PDF
-        =====================
-        */
-        $pdf = new \setasign\Fpdi\Fpdi();
-        $pageCount = $pdf->setSourceFile($originalPath);
-
-        /*
-        =====================
-        SIAPKAN TEMP QR
-        =====================
-        */
-        $tempDir = storage_path('app/public/temp_skp');
-        if (!file_exists($tempDir)) mkdir($tempDir, 0755, true);
-
-        /*
-        =====================
-        LOOP HALAMAN PDF
-        =====================
-        */
-        for ($i = 1; $i <= $pageCount; $i++) {
-
-            $tpl = $pdf->importPage($i);
-            $size = $pdf->getTemplateSize($tpl);
-
-            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-            $pdf->useTemplate($tpl);
+            if (!file_exists($originalPath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File tidak ditemukan'
+                ]);
+            }
 
             /*
             =====================
-            CEK SEMUA POSISI QR
+            LOAD PDF
             =====================
             */
-            foreach ($request->positions as $index => $pos) {
+            $pdf = new \setasign\Fpdi\Fpdi();
+            $pdf->SetAutoPageBreak(false); // ⭐ PENTING biar text gak lompat page
 
-                $targetPage = $pos['page'];
+            $pageCount = $pdf->setSourceFile($originalPath);
 
-                // Support "last"
-                if ($targetPage === "last") {
-                    $targetPage = $pageCount;
-                }
+            /*
+            =====================
+            TEMP QR
+            =====================
+            */
+            $tempDir = storage_path('app/public/temp_skp');
+            if (!file_exists($tempDir)) mkdir($tempDir, 0755, true);
 
-                if ($targetPage == $i) {
+            $kepalaNama = auth()->user()->nama ?? 'Pejabat';
 
-                    /*
-                    =====================
-                    GENERATE QR
-                    =====================
-                    */
-                    $qrText = "ID: " . $docId . " | TTD: " . auth()->user()->nama;
+            /*
+            =====================
+            LOOP HALAMAN
+            =====================
+            */
+            for ($i = 1; $i <= $pageCount; $i++) {
 
-                    $qr = \Endroid\QrCode\Builder\Builder::create()
-                        ->data($qrText)
-                        ->size(150)
-                        ->build();
+                $tpl = $pdf->importPage($i);
+                $size = $pdf->getTemplateSize($tpl);
 
-                    $qrTempPath = $tempDir . "/qr_{$docId}_{$index}.png";
+                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $pdf->useTemplate($tpl);
 
-                    file_put_contents($qrTempPath, $qr->getString());
+                foreach ($request->positions as $index => $pos) {
 
-                    /*
-                    =====================
-                    KONVERSI PERSEN KE PDF COORDINATE
-                    =====================
-                    */
-                    $pageWidth = $size['width'];
-                    $pageHeight = $size['height'];
+                    $targetPage = $pos['page'];
 
-                    $qrWidth = 30; // mm
-                    $qrHeight = 30; // mm
+                    if ($targetPage === "last") {
+                        $targetPage = $pageCount;
+                    }
 
+                    if ($targetPage == $i) {
+
+                        /*
+                        =====================
+                        GENERATE QR
+                        =====================
+                        */
+                        $qrText = "ID: $docId | TTD: $kepalaNama";
+
+                        $qr = Builder::create()
+                            ->data($qrText)
+                            ->size(150)
+                            ->build();
+
+                        $qrTempPath = $tempDir . "/qr_{$docId}_{$index}.png";
+                        file_put_contents($qrTempPath, $qr->getString());
+
+                        /*
+                        =====================
+                        KOORDINAT
+                        =====================
+                        */
+                        $pageWidth  = $size['width'];
+                        $pageHeight = $size['height'];
+
+                        $qrWidth  = 30; // mm
+                        $qrHeight = 30; // mm
+
+                        // posisi persen → pdf coordinate
                     $posX = $pos['x'] * $pageWidth;
-                    $posY = $pos['y'] * $pageHeight;
+                        $posY = $pos['y'] * $pageHeight;
 
-                    /*
-                    =====================
-                    TARUH QR
-                    =====================
-                    */
-                    $pdf->Image($qrTempPath, $posX, $posY, $qrWidth, $qrHeight);
+                        // batasi biar gak keluar halaman
+                        $posX = max(0, min($posX, $pageWidth - $qrWidth));
+                        $posY = max(0, min($posY, $pageHeight - $qrHeight));
 
-                    if (file_exists($qrTempPath)) unlink($qrTempPath);
+                        /*
+                        =====================
+                        TARUH QR
+                        =====================
+                        */
+                        $pdf->Image($qrTempPath, $posX, $posY, $qrWidth, $qrHeight);
+
+                        /*
+                        =====================
+                        TEXT BAWAH QR
+                        =====================
+                        */
+                        $pdf->SetFont('Helvetica', '', 9);
+                        $pdf->SetTextColor(0, 0, 0);
+
+                        $textY = $posY + $qrHeight + 3;
+
+                        $pdf->SetXY($posX - 5, $textY);
+                        $pdf->Cell($qrWidth + 10, 4, $kepalaNama, 0, 2, 'C');
+
+                        if (file_exists($qrTempPath)) unlink($qrTempPath);
+                    }
+                }
+            }
+
+            /*
+            =====================
+            SIMPAN FILE SIGNED
+            =====================
+            */
+            $newFileName = 'ttd/skp_doc_' . $docId . '_signed.pdf';
+
+            Storage::put(
+                'public/' . $newFileName,
+                $pdf->Output('S')
+            );
+
+            /*
+            =====================
+            UPDATE DATABASE
+            =====================
+            */
+            $dokumen->update([
+                'url_signed' => $newFileName,
+                'isttd' => true
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'new_url' => asset('storage/' . $newFileName)
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+public function updateStatus(Request $request, $id)
+{
+    $request->validate([
+        'status_baru' => 'required|in:perbaikan,menungguttd,selesai',
+        'koreksi' => 'nullable|array',
+    ]);
+
+    $skp = SkpPengajuan::findOrFail($id);
+
+    if ($request->status_baru == 'perbaikan') {
+
+        $skp->update([
+            'status' => 'perbaikan'
+        ]);
+
+        if ($request->has('koreksi')) {
+            foreach ($request->koreksi as $docId => $pesan) {
+
+                if (!empty($pesan)) {
+                    $dokumen = SkpDokumen::find($docId);
+
+                    if ($dokumen) {
+                        $dokumen->update([
+                            'catatan' => $pesan
+                        ]);
+                    }
                 }
             }
         }
 
-        /*
-        =====================
-        SIMPAN FILE SIGNED
-        =====================
-        */
-        $newFileName = 'ttd/skp_doc_' . $docId . '_signed.pdf';
+        return redirect()->route('admin.dashboard')
+            ->with('success', 'SKP dikembalikan.');
+    }
 
-        \Storage::put(
-            'public/' . $newFileName,
-            $pdf->Output('S')
-        );
+    if ($request->status_baru == 'menungguttd') {
 
-        /*
-        =====================
-        UPDATE DATABASE
-        =====================
-        */
-        $dokumen->update([
-            'signed_url' => $newFileName
+        SkpDokumen::where('skp_id', $id)->update([
+            'catatan' => null
         ]);
 
-        return response()->json([
-            'success' => true,
-            'new_url' => asset('storage/' . $newFileName)
+        $skp->update([
+            'status' => 'menungguttd'
         ]);
 
-    } catch (\Exception $e) {
+        return redirect()->route('admin.dashboard')
+            ->with('success', 'SKP menunggu tanda tangan.');
+    }
 
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage()
+    if ($request->status_baru == 'selesai') {
+
+        $belumTTD = SkpDokumen::where('skp_id', $id)
+            ->where(function ($q) {
+                $q->where('isttd', false)
+                  ->orWhereNull('isttd');
+            })
+            ->exists();
+
+        if ($belumTTD) {
+            return redirect()->back()
+                ->with('error', 'Masih ada dokumen belum TTD.');
+        }
+
+        $skp->update([
+            'status' => 'selesai'
         ]);
+
+        return redirect()->route('kepala.dashboard')
+            ->with('success', 'SKP selesai.');
     }
 }
 
