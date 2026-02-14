@@ -18,25 +18,66 @@
         Masukkan akun anda untuk melanjutkan
       </p>
 
+      @if ($errors->any())
+          <div class="alert alert-danger">
+              {{ $errors->first() }}
+          </div>
+      @endif
+
       <form method="POST" action="{{ route('login') }}">
         @csrf
 
         <div class="mb-3">
-          <div class="input-group login-input">
-            <span class="input-group-text">
-              <i class="bi bi-person"></i>
-            </span>
-            <input type="text" name="username" class="form-control" placeholder="Username">
-          </div>
+            <label class="form-label fw-semibold">Username</label>
+            <div class="input-group shadow-sm">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="bi bi-person"></i>
+                </span>
+
+                <input 
+                    type="text"
+                    name="username"
+                    class="form-control border-start-0"
+                    placeholder="Masukkan username"
+                    value="{{ old('username') }}"
+                    required
+                >
+              </div>
+              @error('username')
+                <small class="text-danger small mt-1">
+                  Username salah
+                </small>
+              @enderror
         </div>
 
         <div class="mb-3">
-          <div class="input-group login-input">
-            <span class="input-group-text">
-              <i class="bi bi-lock"></i>
-            </span>
-            <input type="password" name="password" class="form-control" placeholder="Password">
-          </div>
+            <label class="form-label fw-semibold">Password</label>
+
+            <div class="input-group shadow-sm">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="bi bi-lock"></i>
+                </span>
+
+                <input 
+                    type="password"
+                    id="password"
+                    name="password"
+                    class="form-control border-start-0 border-end-0"
+                    placeholder="Masukkan password"
+                    required
+                >
+
+                <span class="input-group-text bg-white border-start-0"
+                      style="cursor:pointer"
+                      onclick="togglePassword()">
+                    <i class="bi bi-eye" id="eyeIcon"></i>
+                </span>
+            </div>
+            @error('password')
+                <small class="text-danger small mt-1">
+                  Password salah
+                </small>
+              @enderror
         </div>
 
         <button class="btn btn-login w-100 mb-3">Login</button>
@@ -52,3 +93,17 @@
   <script src="{{ asset('assets/js/app.js') }}"></script>
 </body>
 </html>
+<script>
+function togglePassword() {
+    let input = document.getElementById("password");
+    let icon = document.getElementById("eyeIcon");
+
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.replace("bi-eye","bi-eye-slash");
+    } else {
+        input.type = "password";
+        icon.classList.replace("bi-eye-slash","bi-eye");
+    }
+}
+</script>

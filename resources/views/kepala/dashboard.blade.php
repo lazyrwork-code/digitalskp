@@ -100,9 +100,10 @@
                             <td>{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d-m-Y') }}</td>
                             <td><span class="badge-status badge-selesai">Selesai</span></td>
                             <td class="text-end">
-                                <a class="btn btn-outline-success btn-sm" href="{{ url('/skp/review' . $item->id ) }}">
-                                    <i class="bi bi-qr-code"></i> Tanda Tangani
-                                </a>
+                              <a class="btn btn-success btn-sm rounded-pill"
+                                href="{{ route('skp.showskpdone', $item->id) }}">
+                                <i class="bi bi-file-earmark-text"></i>Lihat SKP Final
+                              </a>
                             </td>
                         </tr>
                     @empty

@@ -119,6 +119,11 @@
                                 href="{{ route('skp.edit', $item->id) }}">
                                   <i class="bi bi-edit"></i> Perbaiki SKP
                               </a>
+                          @elseif($item->status == 'selesai')
+                              <a class="btn btn-success btn-sm rounded-pill"
+                                   href="{{ route('skp.showskpdone', $item->id) }}">
+                                <i class="bi bi-file-earmark-text"></i>Lihat SKP Final
+                              </a>
                           @else
                               <a class="btn btn-success btn-sm rounded-pill"
                                 href="{{ route('skp.show', $item->id) }}">

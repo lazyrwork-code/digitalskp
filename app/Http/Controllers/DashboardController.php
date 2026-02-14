@@ -27,8 +27,6 @@ class DashboardController extends Controller
             $baseQuery->where('user_id', $user->id);
         }
 
-        // 1. Ambil SEMUA data yang butuh tindakan (tanpa filter bulan)
-        // 2. Ambil data 'selesai' HANYA sesuai bulan terpilih
         $allData = (clone $baseQuery)->with('user')
             ->where(function($q) use ($bulanDipilih, $tahunDipilih) {
                 $q->whereIn('status', ['verifikasi', 'perbaikan', 'menungguttd','selesai'])
@@ -59,6 +57,12 @@ class DashboardController extends Controller
         $skp = SkpPengajuan::with('user')->findOrFail($id);
         $dokumen = SkpDokumen::where('skp_id', $id)->get();
         return view('admin.verifikasi-skp', compact('skp', 'dokumen'));
+    }
+    public function showfinish($id)
+    {
+        $skp = SkpPengajuan::with('user')->findOrFail($id);
+        $dokumen = SkpDokumen::where('skp_id', $id)->get();
+        return view('skp.showfinal', compact('skp', 'dokumen'));
     }
 
     public function updateStatus(Request $request, $id)

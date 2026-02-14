@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/show/done/{id}', [DashboardController::class,'showfinish'])->name('skp.showskpdone');
     
     // SKP BARU & DETAIL UMUM
     Route::get('/skp/baru', [SkpPengajuanController::class, 'create'])->name('skp.baru');
@@ -84,7 +85,6 @@ Route::middleware('auth')->group(function () {
         // Route untuk menampilkan HALAMAN tanda tangan (GET)
         Route::get('/skp/{id}/ttd', [VerifikasiTtdController::class, 'showTtd'])->name('kepala.skp.ttd');
 
-        // Route untuk PROSES tanda tangan (POST) - sudah ada di kode kamu
         Route::get('/repository', [RepositorySkpController::class, 'index'])
             ->name('kepala.repository');
     });

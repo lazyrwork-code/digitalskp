@@ -15,7 +15,7 @@
 
         <ul class="dropdown-menu dropdown-menu-end shadow">
             <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="bi bi-person me-2"></i> Profil</a></li>
-            <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="bi bi-key me-2"></i> Ganti Password</a></li>
+            <li><a class="dropdown-item" href="{{ route('profile.edit', ['tab' => 'password']) }}"><i class="bi bi-key me-2"></i> Ganti Password</a></li>
             <li><hr class="dropdown-divider"></li>
             <li>
                 <form method="POST" action="{{ route('logout') }}">

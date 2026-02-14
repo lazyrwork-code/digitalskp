@@ -127,7 +127,7 @@
                 @elseif($statusKey == 'menungguttd')
                     @php $btnLabel = 'Lihat Detail'; $btnIcon = 'bi-eye'; @endphp
                 @elseif($statusKey == 'selesai')
-                    @php $btnLabel = 'Lihat SKP Final'; $btnIcon = 'bi-file-earmark-pdf'; $btnClass = 'btn-success'; @endphp
+                    @php $btnLabel = 'Lihat SKP Final'; $btnIcon = 'bi-file-earmark-pdf'; $btnClass = 'btn-success';  @endphp
                 @endif
 
             @elseif($role == 'admin')
@@ -140,7 +140,7 @@
                 @elseif($statusKey == 'menungguttd')
                     @php $btnLabel = 'Lihat Detail'; $btnIcon = 'bi-eye'; @endphp
                 @elseif($statusKey == 'selesai')
-                    @php $btnLabel = 'Lihat SKP Final'; $btnIcon = 'bi-file-earmark-pdf'; $btnClass = 'btn-success'; @endphp
+                    @php $btnLabel = 'Lihat SKP Final'; $btnIcon = 'bi-file-earmark-pdf'; $btnClass = 'btn-success';$btnUrl = url('show/done/'.$skp->id) @endphp
                 @endif
 
             @elseif($role == 'kepala')
