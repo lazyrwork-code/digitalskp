@@ -93,7 +93,7 @@ class DashboardController extends Controller
 
         // 3. PERBAIKAN DI SINI: Ganti 'catatan_koreksi' menjadi 'catatan'
         if ($request->status_baru == 'menungguttd') {
-            SkpDokumen::where('skp_id', $id)->update(['catatan' => null]);
+            SkpDokumen::where('skp_id', $id)->update(['catatan' => '-']);
         }
 
         $pesanFlash = ($request->status_baru == 'perbaikan') 
