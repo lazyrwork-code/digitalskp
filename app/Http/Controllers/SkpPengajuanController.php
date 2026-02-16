@@ -87,6 +87,7 @@ class SkpPengajuanController extends Controller
             $skp->tahun = $request->tahun;
             $skp->tanggal_pengajuan = $request->tanggal_pengajuan;
             $skp->status = 'verifikasi';
+            $skp->catatan_perbaikan = '-';
             $link_bukti_dukung  = $request->dokumen[0]['link_bukti_dukung'] ?? '-';
             $skp->judul_laporan = $judulHeader;
             $skp->pdf_file = $pdfUtama;
@@ -111,6 +112,8 @@ class SkpPengajuanController extends Controller
                         $dokumen->link_pendukung = $item['link_bukti_dukung'] ?? null;
                         $dokumen->tipe = 'pdf';
                         $dokumen->url = $newPath;
+                        $dokumen->catatan = '-';
+                        $dokumen->url_signed = '-';
                         $dokumen->save();
                     }
                 }
