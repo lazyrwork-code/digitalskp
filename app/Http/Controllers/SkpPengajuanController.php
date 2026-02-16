@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SkpPengajuan;
 use App\Models\SkpDokumen; // WAJIB IMPORT INI
+use App\Models\User; // WAJIB IMPORT INI
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;      // WAJIB IMPORT INI
 use Illuminate\Support\Facades\Storage; // WAJIB IMPORT INI
@@ -29,6 +30,36 @@ class SkpPengajuanController extends Controller
         // Kirim data dan tahunDipilih ke view
         return view('skp.riwayat', compact('data', 'tahunDipilih'));
     }
+
+    public function indexDetail(Request $request, $id_user)
+    {
+        $tahunDipilih = $request->query('tahun', date('Y'));
+
+        $data = SkpPengajuan::with('user')
+                    ->where('tahun', $tahunDipilih)
+                    ->where('status', 'selesai')
+                    ->where('user_id', $id_user)
+                    ->latest()
+                    ->get();
+
+                     $user = User::findOrFail($id_user);
+        return view('kepala.riwayat', compact('user','data','tahunDipilih','id_user'));
+    }
+
+    public function indexKepala(Request $request)
+    {
+        $tahunDipilih = $request->query('tahun', date('Y'));
+
+        $data = SkpPengajuan::with('user')
+                    ->where('tahun', $tahunDipilih)
+                    ->where('status', 'selesai')
+                    ->latest()
+                    ->get();
+
+        return view('kepala.riwayatbyKepala', compact('data','tahunDipilih'));
+    }
+
+
 
     // FORM BARU
     public function create()

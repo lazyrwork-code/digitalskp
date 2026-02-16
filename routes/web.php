@@ -85,8 +85,8 @@ Route::middleware('auth')->group(function () {
         // Route untuk menampilkan HALAMAN tanda tangan (GET)
         Route::get('/skp/{id}/ttd', [VerifikasiTtdController::class, 'showTtd'])->name('kepala.skp.ttd');
 
-        Route::get('/repository', [RepositorySkpController::class, 'index'])
-            ->name('kepala.repository');
+        Route::get('/skp/riwayat', [SkpPengajuanController::class, 'indexKepala'])->name('kepala.riwayat');
+        Route::get('/skp/riwayat/{id_user}', [SkpPengajuanController::class, 'indexDetail'])->name('kepala.riwayat-user');
     });
 });
 

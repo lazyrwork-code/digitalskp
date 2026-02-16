@@ -11,11 +11,15 @@
                 'kepala'  => 'kepala.dashboard',
                 default   => 'dashboard', // pegawai
             };
+            $repositoryRoute = match(auth()->user()->role) {
+                'kepala'  => 'kepala.riwayat',
+                default   => 'skp.riwayat', // pegawai
+            };
 
             $menus = [
                 ['route'=>$dashboardRoute, 'icon'=>'bi-speedometer2','label'=>'Dashboard'],
                 ['route'=>'skp.baru','icon'=>'bi-file-earmark-plus','label'=>'Ajukan SKP Baru'],
-                ['route'=>'skp.riwayat','icon'=>'bi-clock-history','label'=>'Riwayat SKP'],
+                ['route'=>$repositoryRoute,'icon'=>'bi-clock-history','label'=>'Riwayat SKP'],
             ];
         @endphp
 

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('link_pendukung');
             $table->string('url');
             $table->string('url_signed');
-            $table->string('catatan');
+            $table->string('catatan')->nullable;
             $table->boolean('isttd')->default(0);;
             $table->timestamps();
         });

@@ -112,7 +112,7 @@
 
     <!-- ACTION -->
     <div class="text-end mt-4">
-        <a class="btn btn-secondary px-4" href="{{ route('redirect.role') }}"><i class="bi bi-arrow-left"></i>Kembali</a>
+        <a class="btn btn-secondary px-4" href="{{ url()->previous() }}"><i class="bi bi-arrow-left"></i>Kembali</a>
     </div>
     </div>
 </div>
