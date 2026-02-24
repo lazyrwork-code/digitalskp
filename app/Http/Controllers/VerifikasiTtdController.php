@@ -40,161 +40,209 @@ class VerifikasiTtdController extends Controller
 
         return response()->json($ttd);
     }
-    public function simpan(Request $request, $docId)
-    {
-        $request->validate([
-            'positions' => 'required|array'
-        ]);
+public function simpan(Request $request, $docId)
+{
+    $request->validate([
+        'positions' => 'required|array'
+    ]);
 
-        try {
+    try {
 
-            $dokumen = SkpDokumen::findOrFail($docId);
-            $originalPath = storage_path('app/public/' . $dokumen->url);
+        $dokumen = SkpDokumen::findOrFail($docId);
+        $originalPath = storage_path('app/public/' . $dokumen->url);
 
-            if (!file_exists($originalPath)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'File tidak ditemukan'
-                ]);
-            }
-
-            /*
-            =====================
-            LOAD PDF
-            =====================
-            */
-            $pdf = new \setasign\Fpdi\Fpdi();
-            $pdf->SetAutoPageBreak(false); // ⭐ PENTING biar text gak lompat page
-
-            $pageCount = $pdf->setSourceFile($originalPath);
-
-            /*
-            =====================
-            TEMP QR
-            =====================
-            */
-            $tempDir = storage_path('app/public/temp_skp');
-            if (!file_exists($tempDir)) mkdir($tempDir, 0755, true);
-
-            $kepalaNama = auth()->user()->nama ?? 'Pejabat';
-
-            /*
-            =====================
-            LOOP HALAMAN
-            =====================
-            */
-            for ($i = 1; $i <= $pageCount; $i++) {
-
-                $tpl = $pdf->importPage($i);
-                $size = $pdf->getTemplateSize($tpl);
-
-                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                $pdf->useTemplate($tpl);
-
-                foreach ($request->positions as $index => $pos) {
-
-                    $targetPage = $pos['page'];
-
-                    if ($targetPage === "last") {
-                        $targetPage = $pageCount;
-                    }
-
-                    if ($targetPage == $i) {
-
-                        /*
-                        =====================
-                        GENERATE QR
-                        =====================
-                        */
-                        $qrText = "ID: $docId | TTD: $kepalaNama";
-
-                        $qr = Builder::create()
-                            ->data($qrText)
-                            ->size(150)
-                            ->build();
-
-                        $qrTempPath = $tempDir . "/qr_{$docId}_{$index}.png";
-                        file_put_contents($qrTempPath, $qr->getString());
-
-                        /*
-                        =====================
-                        KOORDINAT
-                        =====================
-                        */
-                        $pageWidth  = $size['width'];
-                        $pageHeight = $size['height'];
-
-                        $qrWidth  = 30; // mm
-                        $qrHeight = 30; // mm
-
-                        // posisi persen → pdf coordinate
-                    $posX = $pos['x'] * $pageWidth;
-                        $posY = $pos['y'] * $pageHeight;
-
-                        // batasi biar gak keluar halaman
-                        $posX = max(0, min($posX, $pageWidth - $qrWidth));
-                        $posY = max(0, min($posY, $pageHeight - $qrHeight));
-
-                        /*
-                        =====================
-                        TARUH QR
-                        =====================
-                        */
-                        $pdf->Image($qrTempPath, $posX, $posY, $qrWidth, $qrHeight);
-
-                        /*
-                        =====================
-                        TEXT BAWAH QR
-                        =====================
-                        */
-                        $pdf->SetFont('Helvetica', '', 9);
-                        $pdf->SetTextColor(0, 0, 0);
-
-                        $textY = $posY + $qrHeight + 3;
-
-                        $pdf->SetXY($posX - 5, $textY);
-                        $pdf->Cell($qrWidth + 10, 4, $kepalaNama, 0, 2, 'C');
-
-                        if (file_exists($qrTempPath)) unlink($qrTempPath);
-                    }
-                }
-            }
-
-            /*
-            =====================
-            SIMPAN FILE SIGNED
-            =====================
-            */
-            $newFileName = 'ttd/skp_doc_' . $docId . '_signed.pdf';
-
-            Storage::put(
-                'public/' . $newFileName,
-                $pdf->Output('S')
-            );
-
-            /*
-            =====================
-            UPDATE DATABASE
-            =====================
-            */
-            $dokumen->update([
-                'url_signed' => $newFileName,
-                'isttd' => true
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'new_url' => asset('storage/' . $newFileName)
-            ]);
-
-        } catch (\Exception $e) {
-
+        if (!file_exists($originalPath)) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'File tidak ditemukan'
             ]);
         }
+
+        /*
+        =====================
+        LOAD PDF
+        =====================
+        */
+        $pdf = new \setasign\Fpdi\Fpdi();
+        $pdf->SetAutoPageBreak(false);
+
+        $pageCount = $pdf->setSourceFile($originalPath);
+
+        /*
+        =====================
+        TEMP DIR
+        =====================
+        */
+        $tempDir = storage_path('app/public/temp_skp');
+        if (!file_exists($tempDir)) mkdir($tempDir, 0755, true);
+
+        $kepala     = auth()->user();
+        $kepalaNama = $kepala->nama ?? 'Pejabat';
+        $kepalaNip  = $kepala->nip  ?? '197501012000011003';
+
+        /*
+        =====================
+        LOOP HALAMAN
+        =====================
+        */
+        for ($i = 1; $i <= $pageCount; $i++) {
+
+            $tpl  = $pdf->importPage($i);
+            $size = $pdf->getTemplateSize($tpl);
+
+            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+            $pdf->useTemplate($tpl);
+
+            foreach ($request->positions as $index => $pos) {
+
+                $targetPage = $pos['page'];
+                if ($targetPage === "last") {
+                    $targetPage = $pageCount;
+                }
+
+                if ($targetPage != $i) continue;
+
+                /*
+                =====================
+                GENERATE QR PNG
+                =====================
+                */
+                $verifyId   = $request->verification_id ?? ('VER' . $docId);
+                $qrText     = "ID: {$verifyId} | TTD: {$kepalaNama}";
+
+                $qr = Builder::create()
+                    ->data($qrText)
+                    ->size(150)
+                    ->build();
+
+                $qrTempPath = $tempDir . "/qr_{$docId}_{$index}.png";
+                file_put_contents($qrTempPath, $qr->getString());
+
+                /*
+                =====================
+                UKURAN (mm)
+                =====================
+                Lebar stamp = 45mm, disesuaikan dengan lebar qrDrag di HTML (160px ≈ 45mm)
+                Urutan dari atas:
+                  - Label 3 baris  (~10mm)
+                  - QR image       (25mm)
+                  - Nama           ( 5mm)
+                  - NIP            ( 4mm)
+                Total tinggi      ≈ 44mm
+                =====================
+                */
+                $stampWidth  = 45;
+                $qrSize      = 25;
+                $lineHeight  = 4;
+
+                $pageWidth  = $size['width'];
+                $pageHeight = $size['height'];
+
+                // Posisi awal stamp (sudut kiri atas) dari persentase
+                $posX = $pos['x'] * $pageWidth;
+                $posY = $pos['y'] * $pageHeight;
+
+                $stampHeight = 10 + $qrSize + $lineHeight + $lineHeight; // ~43mm
+                $posX = max(0, min($posX, $pageWidth  - $stampWidth));
+                $posY = max(0, min($posY, $pageHeight - $stampHeight));
+
+                /*
+                =====================
+                BARIS 1: "Mengetahui"
+                =====================
+                */
+                $pdf->SetFont('Helvetica', '', 7);
+                $pdf->SetTextColor(34, 92, 90); // #225c5a
+                $pdf->SetXY($posX, $posY);
+                $pdf->Cell($stampWidth, $lineHeight, 'Mengetahui', 0, 2, 'C');
+
+                /*
+                =====================
+                BARIS 2: "Atasan Langsung" (bold)
+                =====================
+                */
+                $pdf->SetFont('Helvetica', 'B', 8);
+                $pdf->SetX($posX);
+                $pdf->Cell($stampWidth, $lineHeight, 'Atasan Langsung', 0, 2, 'C');
+
+                /*
+                =====================
+                BARIS 3: "Kepala Instalasi Rekam Medis"
+                =====================
+                */
+                $pdf->SetFont('Helvetica', '', 7);
+                $pdf->SetX($posX);
+                $pdf->Cell($stampWidth, $lineHeight, 'Kepala Instalasi Rekam Medis', 0, 2, 'C');
+
+                /*
+                =====================
+                QR CODE (center di dalam stampWidth)
+                =====================
+                */
+                $qrX = $posX + ($stampWidth - $qrSize) / 2;
+                $qrY = $pdf->GetY() + 1;
+                $pdf->Image($qrTempPath, $qrX, $qrY, $qrSize, $qrSize);
+
+                /*
+                =====================
+                NAMA (bold)
+                =====================
+                */
+                $pdf->SetFont('Helvetica', 'B', 8);
+                $pdf->SetTextColor(0, 0, 0);
+                $pdf->SetXY($posX, $qrY + $qrSize + 2);
+                $pdf->Cell($stampWidth, $lineHeight, $kepalaNama, 0, 2, 'C');
+
+                /*
+                =====================
+                NIP
+                =====================
+                */
+                $pdf->SetFont('Helvetica', '', 7);
+                $pdf->SetTextColor(68, 68, 68); // #444
+                $pdf->SetX($posX);
+                $pdf->Cell($stampWidth, $lineHeight, 'NIP. ' . $kepalaNip, 0, 2, 'C');
+
+                // Hapus temp QR
+                if (file_exists($qrTempPath)) unlink($qrTempPath);
+            }
+        }
+
+        /*
+        =====================
+        SIMPAN FILE SIGNED
+        =====================
+        */
+        $newFileName = 'ttd/skp_doc_' . $docId . '_signed.pdf';
+
+        Storage::put(
+            'public/' . $newFileName,
+            $pdf->Output('S')
+        );
+
+        /*
+        =====================
+        UPDATE DATABASE
+        =====================
+        */
+        $dokumen->update([
+            'url_signed' => $newFileName,
+            'isttd'      => true
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'new_url' => asset('storage/' . $newFileName)
+        ]);
+
+    } catch (\Exception $e) {
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
     }
+}
 
 public function updateStatus(Request $request, $id)
 {

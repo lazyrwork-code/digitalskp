@@ -188,13 +188,19 @@
                                 style="position:relative;width:100%;height:600px;border:1px solid #ccc;overflow:auto;">
                                 <div id="pdfPages"></div>
                             </div>
-                            <div id="qrDrag"
-                                style="position:absolute;top:100px;left:100px;cursor:move;text-align:center;background:white;padding:6px;border-radius:6px;z-index:10;">
-                                <div id="qrCanvas"></div>
-                                <div style="font-size:12px;font-weight:bold;margin-top:4px;">
-                                    {{ auth()->user()->nama }}
+                                <div id="qrDrag" style="position: absolute; cursor: move; user-select: none; text-align: center; width: fit-content; min-height: fit-content; z-index: 1000; background-color: #eaf6f6; border: 2px dashed #225c5a; border-radius: 10px; padding: 6px 10px 8px 10px; box-sizing: border-box;">
+                                    <div style="font-size: 10px; line-height: 1.4; margin-bottom: 4px; color: #225c5a;white-space: nowrap;">
+                                        Mengetahui<br>
+                                        <strong style="font-size: 11px;">Atasan Langsung</strong><br>
+                                        Kepala Instalasi Rekam Medis
+                                    </div>
+                                    <div id="qrCanvas" style="display: block; background: white; padding: 3px; border-radius: 4px; margin: 4px auto; width: fit-content;"></div>
+                                    <div style="margin-top: 4px; line-height: 1.4;">
+                                        <strong style="font-size: 11px; color: #111;">{{ auth()->user()->nama }}</strong><br>
+                                        <span style="font-size: 10px; color: #555;">NIP. {{ auth()->user()->nip ?? '197501012000011003' }}</span>
+                                    </div>
+
                                 </div>
-                            </div>
                         </div>
 
 
@@ -235,185 +241,211 @@
 </style>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-
+    // Variabel Global
     let currentDocId = null;
     let currentFile = null;
+    let generatedVerifyId = ""; 
     let kepalaNama = @json(auth()->user()->nama);
 
     const modalTTD = document.getElementById('modalTTD');
     const qrDrag = document.getElementById("qrDrag");
     const pdfPages = document.getElementById("pdfPages");
 
+    // Konfigurasi Worker PDF.js
     pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
 
+    // 1. Saat Modal Muncul
     modalTTD.addEventListener('show.bs.modal', function (event) {
-
         let button = event.relatedTarget;
         currentFile = button.getAttribute("data-file");
         currentDocId = button.getAttribute("data-doc");
-
+        qrDrag.style.display = "none"; // Sembunyikan dulu sampai PDF siap
     });
 
+    // 2. Saat Modal Selesai Tampil
     modalTTD.addEventListener('shown.bs.modal', function () {
-
         loadPDF(currentFile);
 
         setTimeout(() => {
             generateQR();
-            placeQRToLastPage();
-        }, 300);
-
+            qrDrag.style.display = "block";
+            
+            // Default: Munculkan di halaman pertama
+            const firstPage = document.querySelector(".pdf-page");
+            if(firstPage) {
+                firstPage.appendChild(qrDrag);
+                qrDrag.style.left = "50px";
+                qrDrag.style.top = "50px";
+            }
+        }, 500);
     });
 
+    // 3. Fungsi Load PDF ke Canvas
     async function loadPDF(url) {
-
         pdfPages.innerHTML = "";
-
         const pdf = await pdfjsLib.getDocument(url).promise;
 
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-
             const page = await pdf.getPage(pageNum);
-
             let scale = 1.3;
             let viewport = page.getViewport({ scale });
 
-            /* wrapper halaman */
             let pageWrapper = document.createElement("div");
             pageWrapper.classList.add("pdf-page");
             pageWrapper.dataset.page = pageNum;
+            pageWrapper.style.position = "relative";
+            pageWrapper.style.marginBottom = "20px";
+            pageWrapper.style.display = "inline-block";
             pageWrapper.style.width = viewport.width + "px";
+            pageWrapper.style.boxShadow = "0 0 10px rgba(0,0,0,0.2)";
 
             let canvas = document.createElement("canvas");
             let ctx = canvas.getContext("2d");
-
             canvas.width = viewport.width;
             canvas.height = viewport.height;
 
             pageWrapper.appendChild(canvas);
             pdfPages.appendChild(pageWrapper);
 
-            await page.render({
-                canvasContext: ctx,
-                viewport: viewport
-            }).promise;
-
+            await page.render({ canvasContext: ctx, viewport: viewport }).promise;
         }
-
     }
 
-    function placeQRToLastPage(){
+    // 4. Fungsi Generate QR dengan ID Otomatis (VER + 8 Digit)
+    function generateQR() {
+        // Buat ID Acak: VER + 8 angka
+        let randomDigits = Math.floor(10000000 + Math.random() * 90000000);
+        generatedVerifyId = "VER" + randomDigits;
 
-        const pages = document.querySelectorAll(".pdf-page");
-        if(pages.length === 0) return;
-
-        const lastPage = pages[pages.length - 1];
-
-        lastPage.appendChild(qrDrag);
-        qrDrag.style.left = "100px";
-        qrDrag.style.top = "100px";
-    }
-
-    function generateQR(){
+        // Ambil waktu sekarang
+        let now = new Date();
+        let timestamp = now.toLocaleDateString('id-ID') + " " + now.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
 
         let qrCanvas = document.getElementById("qrCanvas");
         qrCanvas.innerHTML = "";
 
-        new QRCode(qrCanvas,{
-            text: "Dokumen ID : "+currentDocId+" | TTD : "+kepalaNama,
-            width:100,
-            height:100
+        new QRCode(qrCanvas, {
+            text: `ID: ${generatedVerifyId} | Tgl: ${timestamp} | TTD: ${kepalaNama}`,
+            width: 80,
+            height: 80,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.M
         });
+         setTimeout(() => {
+        qrDrag.style.width = qrDrag.scrollWidth + "px";
+        qrDrag.style.height = qrDrag.scrollHeight + "px";
+    }, 100);
     }
 
-    function moveQRToPage(){
-
+    // 5. Logika Pindah Halaman saat Drag
+    function moveQRToPage() {
         const qrRect = qrDrag.getBoundingClientRect();
         const pages = document.querySelectorAll(".pdf-page");
-        for(let page of pages){
+        
+        for (let page of pages) {
             const rect = page.getBoundingClientRect();
-            if(qrRect.top >= rect.top && qrRect.top <= rect.bottom){
-                if(qrDrag.parentElement !== page){
+            // Cek apakah posisi kursor/qr berada di dalam area halaman tertentu
+            if (qrRect.top >= rect.top && qrRect.top <= rect.bottom) {
+                if (qrDrag.parentElement !== page) {
                     page.appendChild(qrDrag);
-                    qrDrag.style.left = qrRect.left - rect.left + "px";
-                    qrDrag.style.top = qrRect.top - rect.top + "px";
+                    qrDrag.style.left = (qrRect.left - rect.left) + "px";
+                    qrDrag.style.top = (qrRect.top - rect.top) + "px";
                 }
                 return;
             }
         }
     }
 
-    let offsetX = 0;
-    let offsetY = 0;
-    let isDragging = false;
-    qrDrag.addEventListener("pointerdown",(e)=>{
-        e.preventDefault();
-        isDragging = true;
-        qrDrag.setPointerCapture(e.pointerId);
-        const rect = qrDrag.getBoundingClientRect();
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
-    });
-    qrDrag.addEventListener("pointermove",(e)=>{
+    // 5. Drag relatif ke pdfPages (container semua halaman)
+let offsetX = 0, offsetY = 0, isDragging = false;
 
-        if(!isDragging || !qrDrag.hasPointerCapture(e.pointerId)) return;
+qrDrag.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    isDragging = true;
+    qrDrag.setPointerCapture(e.pointerId);
 
-        const parentRect = qrDrag.parentElement.getBoundingClientRect();
-
-        let newX = e.clientX - parentRect.left - offsetX;
-        let newY = e.clientY - parentRect.top - offsetY;
-
-        let maxX = parentRect.width - qrDrag.clientWidth;
-        let maxY = parentRect.height - qrDrag.clientHeight;
-
-        newX = Math.max(0,Math.min(newX,maxX));
-        newY = Math.max(0,Math.min(newY,maxY));
-
-        qrDrag.style.left = newX+"px";
-        qrDrag.style.top = newY+"px";
-
-        moveQRToPage();
-
-    });
-    function stopDrag(e){
-        if(qrDrag.hasPointerCapture(e.pointerId)){
-            qrDrag.releasePointerCapture(e.pointerId);
-        }
-        isDragging = false;
+    // Pastikan qrDrag ada di dalam pdfPages
+    if (qrDrag.parentElement !== pdfPages) {
+        pdfPages.appendChild(qrDrag);
     }
-    qrDrag.addEventListener("pointerup",stopDrag);
-    qrDrag.addEventListener("pointercancel",stopDrag);
+    qrDrag.style.position = "absolute";
 
-    document.getElementById("btnSimpanTTD").addEventListener("click",function(){
+    const pagesRect = pdfPages.getBoundingClientRect();
+    offsetX = e.clientX - pagesRect.left - qrDrag.offsetLeft;
+    offsetY = e.clientY - pagesRect.top - qrDrag.offsetTop;
+});
 
-        const page = qrDrag.parentElement;
-        const pageNumber = parseInt(page.dataset.page);
+qrDrag.addEventListener("pointermove", (e) => {
+    if (!isDragging) return;
 
-        const posX = qrDrag.offsetLeft / page.clientWidth;
-        const posY = qrDrag.offsetTop  / page.clientHeight;
+    const pagesRect = pdfPages.getBoundingClientRect();
+    let newX = e.clientX - pagesRect.left - offsetX;
+    let newY = e.clientY - pagesRect.top - offsetY;
 
-        fetch(`/kepala/ttd/${currentDocId}`,{
-            method:"POST",
-            headers:{
-                "Content-Type":"application/json",
-                "X-CSRF-TOKEN":"{{ csrf_token() }}"
-            },
-            body: JSON.stringify({
-                positions:[{
-                    page: pageNumber,
-                    x: posX,
-                    y: posY
-                }]
-            })
-        })
-        .then(r=>r.json())
-        .then(res=>{
-            if(res.success){
-                alert("Berhasil");
-                location.reload();
+    // Batasi dalam pdfPages
+    newX = Math.max(0, Math.min(newX, pdfPages.scrollWidth - qrDrag.clientWidth));
+    newY = Math.max(0, Math.min(newY, pdfPages.scrollHeight - qrDrag.clientHeight));
+
+    qrDrag.style.left = newX + "px";
+    qrDrag.style.top = newY + "px";
+});
+
+function stopDrag(e) {
+    if (qrDrag.hasPointerCapture(e.pointerId)) {
+        qrDrag.releasePointerCapture(e.pointerId);
+    }
+    isDragging = false;
+}
+
+qrDrag.addEventListener("pointerup", stopDrag);
+qrDrag.addEventListener("pointercancel", stopDrag);
+
+
+    // 7. Simpan Posisi ke Backend
+    document.getElementById("btnSimpanTTD").addEventListener("click", function () {
+        // Cari halaman mana yang posisinya overlap dengan qrDrag
+        const qrTop = qrDrag.offsetTop;
+        const qrLeft = qrDrag.offsetLeft;
+
+        let targetPage = null;
+        document.querySelectorAll(".pdf-page").forEach(page => {
+            const pageTop = page.offsetTop;
+            const pageBottom = pageTop + page.clientHeight;
+            if (qrTop >= pageTop && qrTop <= pageBottom) {
+                targetPage = page;
             }
         });
 
+        if (!targetPage) {
+            alert("Gagal mendeteksi halaman. Coba geser QR code sedikit.");
+            return;
+        }
+
+        const pageNumber = parseInt(targetPage.dataset.page);
+        const posX = (qrLeft - targetPage.offsetLeft) / targetPage.clientWidth;
+        const posY = (qrTop - targetPage.offsetTop) / targetPage.clientHeight;
+
+        fetch(`/kepala/ttd/${currentDocId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({
+                verification_id: generatedVerifyId,
+                positions: [{ page: pageNumber, x: posX, y: posY }]
+            })
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                alert("Dokumen Berhasil Ditandatangani!");
+                location.reload();
+            } else {
+                alert("Gagal menyimpan. Coba lagi.");
+            }
+        });
     });
 });
 </script>
