@@ -152,7 +152,7 @@ public function simpan(Request $request, $docId)
                 =====================
                 */
                 $pdf->SetFont('Helvetica', '', 7);
-                $pdf->SetTextColor(34, 92, 90); // #225c5a
+                $pdf->SetTextColor(0, 0, 0);
                 $pdf->SetXY($posX, $posY);
                 $pdf->Cell($stampWidth, $lineHeight, 'Mengetahui', 0, 2, 'C');
 
