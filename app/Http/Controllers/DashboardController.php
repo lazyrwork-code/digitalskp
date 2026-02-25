@@ -28,16 +28,11 @@ class DashboardController extends Controller
         }
 
         $allData = (clone $baseQuery)->with('user')
-            ->where(function($q) use ($bulanDipilih, $tahunDipilih) {
-                $q->whereIn('status', ['verifikasi', 'perbaikan', 'menungguttd','selesai'])
-                ->orWhere(function($sq) use ($bulanDipilih, $tahunDipilih) {
-                    $sq->where('status', 'selesai')
-                        ->where('bulan', $bulanDipilih)
-                        ->where('tahun', $tahunDipilih);
-                });
-            })
-            ->latest()
-            ->get();
+        ->whereIn('status', ['verifikasi', 'perbaikan', 'menungguttd','selesai'])
+        ->where('tahun', $tahunDipilih)
+        ->whereRaw('TRIM(bulan) = ?', [$bulanDipilih])
+        ->latest()
+        ->get();
 
         // Hitung counts berdasarkan data yang SUDAH ditarik ($allData)
         // Supaya angka di kartu SAMA dengan jumlah data di tabel

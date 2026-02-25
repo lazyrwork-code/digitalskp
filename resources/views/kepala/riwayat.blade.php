@@ -54,7 +54,7 @@ use Carbon\Carbon;
                             <td>{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d-m-Y') }}</td>
                             <td>{{ $item->unit }}</td>
                             <td class="text-end">
-                                <a href="{{ route('skp.show', $item->id) }}" class="btn btn-outline-success btn-sm rounded-pill">
+                                <a href="{{ route('skp.showskpdone', $item->id) }}" class="btn btn-outline-success btn-sm rounded-pill">
                                     <i class="bi bi-search"></i> Lihat SKP
                                 </a>
                             </td>

@@ -108,7 +108,8 @@ public function simpan(Request $request, $docId)
                 =====================
                 */
                 $verifyId   = $request->verification_id ?? ('VER' . $docId);
-                $qrText     = "ID: {$verifyId} | TTD: {$kepalaNama}";
+                $timestamp = now()->locale('id')->translatedFormat('d F Y H:i');
+                $qrText = "ID: {$verifyId} | Tgl: {$timestamp} | TTD: {$kepalaNama}";
 
                 $qr = Builder::create()
                     ->data($qrText)
