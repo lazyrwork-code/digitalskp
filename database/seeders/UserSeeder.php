@@ -32,7 +32,7 @@ class UserSeeder extends Seeder
 
         // 3. User Kepala (Untuk TTD Final)
         User::create([
-            'nama'     => 'Dr. Heru (Kepala)',
+            'nama'     => 'Dr. Heru Budiansyah',
             'username' => 'kepala',
             'email'    => 'kepala@test.com',
             'nip'      => '197501012000011003',
