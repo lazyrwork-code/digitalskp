@@ -6,46 +6,31 @@
 <div class="content">
     <h3 class="fw-bold mb-4">Dashboard</h3>
 
-    {{-- ================= FILTER FORM ================= --}}
-    <form action="{{ url()->current() }}" method="GET" class="d-flex gap-3 mb-4">
+<form action="{{ url()->current() }}" method="GET" class="d-flex gap-3 mb-4">
 
-        {{-- Simpan status supaya tidak reset --}}
-        <input type="hidden" name="status" id="statusInput" value="{{ request('status', 'ttd') }}">
+    <input type="hidden" name="status" id="statusInput" value="{{ request('status', 'ttd') }}">
 
-        {{-- Bulan --}}
-        <select name="bulan" class="form-select w-auto">
-            @foreach(['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'] as $m)
-                <option value="{{ $m }}" {{ $bulanDipilih == $m ? 'selected' : '' }}>
-                    {{ $m }}
-                </option>
-            @endforeach
-        </select>
+    <select name="bulan" class="form-select w-auto" onchange="this.form.submit()">
+        @foreach(['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'] as $m)
+            <option value="{{ $m }}" {{ $bulanDipilih == $m ? 'selected' : '' }}>
+                {{ $m }}
+            </option>
+        @endforeach
+    </select>
 
-        {{-- Tahun --}}
-        <select name="tahun" class="form-select w-auto">
-            @for($y = date('Y'); $y >= 2024; $y--)
-                <option value="{{ $y }}" {{ $tahunDipilih == $y ? 'selected' : '' }}>
-                    {{ $y }}
-                </option>
-            @endfor
-        </select>
+    <select name="tahun" class="form-select w-auto" onchange="this.form.submit()">
+        @for($y = date('Y'); $y >= 2024; $y--)
+            <option value="{{ $y }}" {{ $tahunDipilih == $y ? 'selected' : '' }}>
+                {{ $y }}
+            </option>
+        @endfor
+    </select>
 
-        <button type="submit" class="btn btn-primary">
-            Filter
-        </button>
+</form>
 
-        <a href="{{ url()->current() }}" class="btn btn-outline-secondary">
-            Reset
-        </a>
-
-    </form>
-
-    {{-- ================= STATUS CARD ================= --}}
     <div class="row g-4 mb-5">
         <div class="col-md-3">
-            <div class="card-status status-card rm-card"
-                 data-status="ttd"
-                 style="cursor: pointer;">
+            <div class="card-status status-card rm-card active" data-status="ttd" style="cursor: pointer;">
                 <div>
                     <div class="text-muted">Menunggu TTD</div>
                     <h2 class="fw-bold mt-2">{{ $counts['ttd'] }}</h2>
@@ -57,9 +42,7 @@
         </div>
 
         <div class="col-md-3">
-            <div class="card-status status-card rm-card"
-                 data-status="selesai"
-                 style="cursor: pointer;">
+            <div class="card-status status-card rm-card" data-status="selesai" style="cursor: pointer;">
                 <div>
                     <div class="text-muted">Pengajuan Selesai</div>
                     <h2 class="fw-bold mt-2">{{ $counts['selesai'] }}</h2>
@@ -71,15 +54,11 @@
         </div>
     </div>
 
-    {{-- ================= TABLE ================= --}}
     <div class="bg-white p-4 rounded-4 shadow-sm">
         <h5 class="fw-bold mb-3">Riwayat Pengajuan SKP</h5>
 
         <div id="table-wrapper">
-
-            {{-- TABLE MENUNGGU TTD --}}
-            <table class="table align-middle status-table"
-                   data-status="ttd">
+            <table class="table align-middle status-table rm-table" data-status="ttd">
                 <thead>
                     <tr>
                         <th>Nama Pegawai</th>
@@ -97,31 +76,20 @@
                             <td>{{ $item->bulan }}</td>
                             <td>{{ $item->tahun }}</td>
                             <td>{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d-m-Y') }}</td>
-                            <td>
-                                <span class="badge-status badge-ttd">
-                                    Menunggu TTD
-                                </span>
-                            </td>
+                            <td><span class="badge-status badge-ttd">Menunggu TTD</span></td>
                             <td class="text-end">
-                                <a class="btn btn-outline-success btn-sm"
-                                   href="{{ route('skp.show.detail', $item->id) }}">
+                                <a class="btn btn-outline-success btn-sm" href="{{ route('skp.show.detail', $item->id) }}">
                                     <i class="bi bi-qr-code"></i> Tanda Tangani
                                 </a>
                             </td>
                         </tr>
                     @empty
-                        <tr>
-                            <td colspan="6" class="text-center py-4">
-                                Tidak ada data menunggu TTD
-                            </td>
-                        </tr>
+                        <tr><td colspan="6" class="text-center py-4">Tidak ada data menunggu TTD</td></tr>
                     @endforelse
                 </tbody>
             </table>
 
-            {{-- TABLE SELESAI --}}
-            <table class="table align-middle status-table d-none"
-                   data-status="selesai">
+            <table class="table align-middle status-table rm-table d-none" data-status="selesai">
                 <thead>
                     <tr>
                         <th>Nama Pegawai</th>
@@ -139,69 +107,52 @@
                             <td>{{ $item->bulan }}</td>
                             <td>{{ $item->tahun }}</td>
                             <td>{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d-m-Y') }}</td>
-                            <td>
-                                <span class="badge-status badge-selesai">
-                                    Selesai
-                                </span>
-                            </td>
+                            <td><span class="badge-status badge-selesai">Selesai</span></td>
                             <td class="text-end">
-                                <a class="btn btn-success btn-sm rounded-pill"
-                                   href="{{ route('skp.showskpdone', $item->id) }}">
-                                    <i class="bi bi-file-earmark-text"></i>
-                                    Lihat SKP Final
-                                </a>
+                              <a class="btn btn-success btn-sm rounded-pill"
+                                href="{{ route('skp.showskpdone', $item->id) }}">
+                                <i class="bi bi-file-earmark-text"></i>Lihat SKP Final
+                              </a>
                             </td>
                         </tr>
                     @empty
-                        <tr>
-                            <td colspan="6" class="text-center py-4">
-                                Tidak ada data selesai
-                            </td>
-                        </tr>
+                        <tr><td colspan="6" class="text-center py-4">Tidak ada data selesai</td></tr>
                     @endforelse
                 </tbody>
             </table>
-
         </div>
     </div>
 </div>
 
-{{-- ================= SCRIPT ================= --}}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-
     const cards = document.querySelectorAll('.status-card');
     const tables = document.querySelectorAll('.status-table');
-    const statusInput = document.getElementById('statusInput');
 
     function activateStatus(status) {
 
+        // reset semua card
         cards.forEach(c => c.classList.remove('active'));
+
+        // reset semua table
         tables.forEach(t => t.classList.add('d-none'));
 
+        // aktifkan yg dipilih
         document.querySelector(`.status-card[data-status="${status}"]`)
             ?.classList.add('active');
 
         document.querySelector(`.status-table[data-status="${status}"]`)
             ?.classList.remove('d-none');
-
-        if(statusInput){
-            statusInput.value = status;
-        }
     }
 
-    // Ambil status dari URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentStatus = urlParams.get('status') || 'ttd';
+    // 🔥 default pertama kali load
+    activateStatus('ttd');
 
-    activateStatus(currentStatus);
-
+    // klik event
     cards.forEach(card => {
         card.addEventListener('click', function() {
             activateStatus(this.dataset.status);
         });
     });
-
 });
-</script>
-@endsection
+</script>@endsection
