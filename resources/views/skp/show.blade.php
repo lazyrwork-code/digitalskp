@@ -53,9 +53,10 @@
             <tr>
             <th width="40">No</th>
             <th>Nama Dokumen</th>
-            <th>Judul Laporan</th>
+            <th>Kegiatan Tugas Jabatan</th>
             <th>Link Bukti Dukung</th>
-            <th class="text-end">Upload Dokumen SKP</th>
+            <th class="text-end">Laporan Realisasi Kegiatan</th>
+            <th>Dokumen SKP Selesai TTD</th>
             </tr>
         </thead>
         <tbody>
@@ -91,6 +92,18 @@
                         <a href="{{ asset('storage/'.$dok->url) }}"
                         target="_blank"
                         class="btn btn-info btn-sm text-white">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                        </a>
+                    @else
+                        <span class="text-muted">-</span>
+                    @endif
+                </td>
+
+                <td class="text-center">
+                    @if ($dok->url_signed)
+                        <a href="{{ asset('storage/'.$dok->url_signed) }}"
+                        target="_blank"
+                        class="btn btn-primary btn-sm text-white">
                             <i class="bi bi-file-earmark-pdf"></i>
                         </a>
                     @else

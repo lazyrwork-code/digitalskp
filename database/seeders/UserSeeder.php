@@ -31,12 +31,22 @@ class UserSeeder extends Seeder
         ]);
 
         // 3. User Kepala (Untuk TTD Final)
-        User::create([
-            'nama'     => 'Dr. Heru Budiansyah',
+        User::updateOrCreate([
+            'nama'     => 'Ahmad Muhajir, A.Md.PK., S.Tr.RMIK',
             'username' => 'kepala',
             'email'    => 'kepala@test.com',
-            'nip'      => '197501012000011003',
+            'nip'      => '19900107 202421 1 009',
             'role'     => 'kepala',
+            'password' => Hash::make('password'),
+        ]);
+
+        // 4. User Pegawai (Untuk Input SKP)
+        User::updateOrCreate([
+            'nama'     => 'Intansari',
+            'username' => 'intansari',
+            'email'    => 'intansari@test.com',
+            'nip'      => '199511212019032026',
+            'role'     => 'pegawai',
             'password' => Hash::make('password'),
         ]);
     }

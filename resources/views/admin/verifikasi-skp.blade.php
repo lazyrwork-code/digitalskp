@@ -48,9 +48,9 @@
                         <tr>
                             <th width="40">No</th>
                             <th>Nama Dokumen</th>
-                            <th>Judul Laporan</th>
+                            <th>Kegiatan Tugas Jabatan</th>
                             <th>Link Bukti Dukung</th>
-                            <th>Dokumen SKP</th>
+                            <th>Laporan Realisasi Kegiatan</th>
                             <th>Keterangan Koreksi</th>
                         </tr>
                     </thead>

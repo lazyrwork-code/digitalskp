@@ -42,21 +42,18 @@
                     <label class="form-label small text-muted">Tahun SKP</label>
                     <select name="tahun" class="form-select">
                         <option value="2026" {{ date('Y') == 2026 ? 'selected' : '' }}>2026</option>
-                        <option value="2025" {{ date('Y') == 2025 ? 'selected' : '' }}>2025</option>
-                        <option value="2024" {{ date('Y') == 2024 ? 'selected' : '' }}>2024</option>
                     </select>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label small text-muted">Unit</label>
                     <select name="unit" class="form-select">
-                        <option value="Instalasi Rekam Medik">Instalasi Rekam Medik</option>
-                        <option value="Registrasi Vaksin">Registrasi Vaksin</option>
-                        <option value="Registrasi Rawat Jalan">Registrasi Rawat Jalan</option>
-                        <option value="Registrasi Rawat Inap">Registrasi Rawat Inap</option>
-                        <option value="Registrasi Rawat IGD">Registrasi Rawat IGD</option>
-                        <option value="Pengembangan EMR" selected>Pengembangan EMR</option>
-                        <option value="Rekam Medis">Rekam Medis</option>
+                        <option value="Kepala Instalasi Rekam Medik">Kepala Instalasi Rekam Medik</option>
+                        <option value="Registrasi">Registrasi</option>
+                        <option value="Pelayanan Rekam Medik">Pelayanan Rekam Medik</option>
+                        <option value="Koding dan Grouping">Koding dan Grouping</option>
+                        <option value="Filing">Filing</option>
+                        <option value="Pengembangan Pelaporan dan Evaluasi" selected>Pengembangan, Pelaporan dan Evaluasi</option>
                     </select>
                 </div>
             </div>
@@ -72,9 +69,9 @@
                         <tr>
                             <th width="40">No</th>
                             <th>Nama Dokumen</th>
-                            <th>Judul Laporan</th>
+                            <th>Kegiatan Tugas Jabatan</th>
                             <th>Link Bukti Dukung</th>
-                            <th class="text-end" width="300">Aksi</th>
+                            <th class="text-end" width="300">Laporan Realisasi Kegiatan</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -170,7 +167,7 @@ function skpUpload() {
 
         resetList() {
             this.dokumenList = [
-                { nama: 'Logbook SKP', isUploaded: false, isLoading: false, savedPath: '', fileUrl: '', judul_laporan: '', link_bukti_dukung: '' },
+                { nama: 'Catatan Harian Kerja', isUploaded: false, isLoading: false, savedPath: '', fileUrl: '', judul_laporan: '', link_bukti_dukung: '' },
                 { nama: 'Laporan SKP 1', isUploaded: false, isLoading: false, savedPath: '', fileUrl: '', judul_laporan: '', link_bukti_dukung: '' },
                 { nama: 'Laporan SKP 2', isUploaded: false, isLoading: false, savedPath: '', fileUrl: '', judul_laporan: '', link_bukti_dukung: '' },
                 { nama: 'Laporan SKP 3', isUploaded: false, isLoading: false, savedPath: '', fileUrl: '', judul_laporan: '', link_bukti_dukung: '' },

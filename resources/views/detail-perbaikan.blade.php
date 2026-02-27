@@ -37,13 +37,12 @@
             <div class="col-md-6">
             <label class="form-label small text-muted">Unit</label>
             <select class="form-select" disabled>
-                <option>Instalasi Rekam Medik</option>
-                <option>Registrasi Vaksin</option>
-                <option>Registrasi Rawat Jalan</option>
-                <option>Registrasi Rawat Inap</option>
-                <option>Registrasi Rawat IGD</option>
-                <option selected>Pengembangan EMR</option>
-                <option>Rekam Medis</option>
+                <option>Kepala Instalasi Rekam Medik</option>
+                <option>Registrasi</option>
+                <option>Pelayanan Rekam Medik</option>
+                <option>Koding dan Grouping</option>
+                <option>Filing</option>
+                <option selected>Pengembangan, Pelaporan dan Evaluasi</option>
             </select>
             </div>
         </div>
@@ -59,9 +58,9 @@
                 <tr>
                 <th width="40">No</th>
                 <th>Nama Dokumen</th>
-                <th>Judul Laporan</th>
+                <th>Kegiatan Tugas Jabatan</th>
                 <th>Link Bukti Dukung</th>
-                <th class="text-end">Dokumen SKP</th>
+                <th class="text-end">Laporan Realisasi Kegiatan</th>
                 <th>Keterangan Koreksi</th>
                 </tr>
             </thead>
@@ -69,7 +68,7 @@
                 <tr>
                 <td>1</td>
                 <td>
-                    Logbook SKP
+                    Catatan Kinerja Harian
                     <div class="small text-muted">Dokumen PDF</div>
                 </td>
                 <td>
