@@ -1,0 +1,585 @@
+/* =========================
+   ROOT & GLOBAL
+========================= */
+:root {
+  --primary: #0f766e;
+  --bg-app: #f6fbfa;
+
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 80px;
+
+  --card-title: 0.8rem;
+  --card-number: 2.2rem;
+}
+
+body {
+  background: var(--bg-app);
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+}
+
+/* =========================
+   LAYOUT
+========================= */
+.app-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+.sidebar {
+  width: var(--sidebar-width);
+  background: #ffffff;
+  border-right: 1px solid #eaeaea;
+  transition: width 0.25s ease;
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed);
+}
+
+.sidebar-brand {
+  font-weight: 700;
+  color: var(--primary);
+  padding: 16px;
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .sidebar-brand span {
+  display: none;
+}
+
+.sidebar .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin: 6px;
+  border-radius: 10px;
+  color: #333;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sidebar .nav-link.active {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.sidebar.collapsed .nav-link span {
+  display: none;
+}
+
+/* =========================
+   MAIN AREA
+========================= */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================
+   TOPBAR
+========================= */
+.topbar {
+  background: #ffffff;
+  border-bottom: 1px solid #eaeaea;
+  padding: 14px 20px;
+}
+
+/* =========================
+   CONTENT
+========================= */
+.content {
+  padding: 30px;
+}
+
+/* =========================
+   DASHBOARD CARD (BASE)
+========================= */
+.card-status {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 24px;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+/* font */
+.card-status h2 {
+  font-size: var(--card-number);
+  margin: 0;
+}
+
+.card-status .fw-semibold,
+.card-status .text-muted {
+  font-size: var(--card-title);
+}
+
+/* =========================
+   STATUS CARD INTERACTION
+========================= */
+.status-card {
+  cursor: pointer;
+  background: #ffffff;
+  color: #333;
+  transition: all 0.25s ease;
+}
+
+.status-card.active {
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+/* =========================
+   STATUS CARD ACTIVE COLOR
+========================= */
+
+/* =========================
+   CARD FONT WEIGHT STATE
+========================= */
+
+/* default (NON-AKTIF) */
+.status-card .fw-semibold,
+.status-card .text-muted {
+  font-weight: 400;
+}
+
+/* AKTIF */
+.status-card.active .fw-semibold,
+.status-card.active .text-muted {
+  font-weight: 700;
+}
+
+/* angka biar tetap tegas */
+.status-card h2 {
+  font-weight: 700;
+}
+
+/* MENUNGGU VERIFIKASI */
+.status-card[data-status="verifikasi"].active {
+  background: #ffc83d;
+  color: #000;
+}
+
+/* PERLU PERBAIKAN */
+.status-card[data-status="perbaikan"].active {
+  background: #ff9f6e;
+  color: #000;
+}
+
+/* MENUNGGU TTD */
+.status-card[data-status="ttd"].active {
+  background: #8b8cff;
+  color: #fff;
+}
+
+/* PENGAJUAN SELESAI */
+.status-card[data-status="selesai"].active {
+  background: #4cd38b;
+  color: #fff;
+}
+
+/* icon saat aktif */
+.status-card.active .icon-circle {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.status-card.active .fw-semibold,
+.status-card.active .text-muted {
+  color: inherit;
+}
+
+/* =========================
+   CARD ICON POSITION (RIGHT)
+========================= */
+
+/* pastikan card jadi reference */
+.card-status {
+  position: relative;
+}
+
+/* icon selalu di kanan */
+.card-status .icon-circle {
+  position: absolute;
+  right: 24px; /* jarak dari kanan card */
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* =========================
+   ICON CIRCLE
+========================= */
+.icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.icon-orange {
+  background: #ffe5d0;
+  color: #fd7e14;
+}
+
+.icon-purple {
+  background: #ebe9ff;
+  color: #6f42c1;
+}
+
+.icon-green {
+  background: #e0f7ec;
+  color: #198754;
+}
+
+/* =========================
+   BADGE STATUS
+========================= */
+.badge-status {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* =========================
+   TABLE
+========================= */
+.table thead {
+  background: #f1f5f9;
+}
+
+/* =========================
+   BADGE SMALL
+========================= */
+.badge-status {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* warna status */
+.badge-verifikasi {
+  background: #ffc83d;
+  color: #000;
+}
+
+.badge-perbaikan {
+  background: #ff9f6e;
+  color: #000;
+}
+
+.badge-ttd {
+  background: #8b8cff;
+  color: #fff;
+}
+
+.badge-selesai {
+  background: #4cd38b;
+  color: #fff;
+}
+
+/* =========================
+   TABLE STATUS TOGGLE
+========================= */
+.status-table {
+  display: none;
+}
+
+.status-table.is-active {
+  display: table;
+}
+
+/* =========================
+   BUTTON BASE
+========================= */
+.btn {
+  padding: 6px 14px; /* tinggi & lebar nyaman */
+  font-size: 0.85rem;
+  border-radius: 10px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* =========================
+   BUTTON PRIMARY CUSTOM
+========================= */
+.btn-prima {
+  background: #0f766e;
+  color: #fff;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.btn-prima:hover {
+  background: #0c5f58;
+  color: #fff;
+}
+
+.btn i {
+  margin-right: 6px;
+  font-size: 1.1em;
+}
+
+.btn i {
+  margin-right: 6px;
+  font-size: 1.1em;
+}
+
+.btn-outline-success {
+  border-radius: 10px;
+  padding: 5px 12px;
+}
+
+/* =========================
+   YEAR FILTER BUTTON
+========================= */
+.btn-year {
+  border-radius: 12px;
+  padding: 10px;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #333;
+}
+
+.btn-year.active {
+  background: #0f766e;
+  color: #fff;
+}
+
+/*
+LOGIN
+*/
+
+.login-wrapper {
+  height: 100vh;
+}
+
+/* LEFT SIDE */
+.login-left {
+  width: 50%;
+  background: #ffffff;
+}
+
+.login-input .input-group-text {
+  background: #f1f5f9;
+  border: none;
+}
+
+.login-input .form-control {
+  background: #f1f5f9;
+  border: none;
+  padding: 12px;
+  border-radius: 0 10px 10px 0;
+}
+
+.login-input input:focus {
+  box-shadow: none;
+}
+
+/* LOGIN BUTTON */
+.btn-login {
+  background: #0f766e;
+  color: #fff;
+  padding: 12px;
+  font-weight: 600;
+  border-radius: 10px;
+}
+
+.btn-login:hover {
+  background: #0c5f58;
+  color: #fff;
+}
+
+/* SOCIAL BUTTON */
+.btn-social {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.btn-social:hover {
+  background: #f1f5f9;
+}
+
+/* RIGHT SIDE */
+.login-right {
+  width: 50%;
+  background: linear-gradient(135deg, #0f766e, #0c5f58);
+  display: flex;
+}
+
+.login-image-box {
+  width: 70%;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/*Font Tabel*/
+/* Kecilkan font tabel riwayat */
+.status-table td,
+.status-table th {
+  font-size: 0.85rem !important;
+}
+
+/* Kecilkan badge */
+.status-table .badge-status {
+  font-size: 0.75rem !important;
+  padding: 6px 10px !important;
+}
+
+/* Kecilkan tombol aksi */
+.status-table .btn-sm {
+  font-size: 0.75rem !important;
+  padding: 6px 12px !important;
+}
+
+/*BTN KEPUTUSAN VERIFIKASI*/
+.btn-keputusan {
+  padding: 14px 28px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 12px;
+  border: none;
+  display: flex;
+  align-items: center;
+}
+
+.btn-perbaikan {
+  background: #ffc107;
+  color: #333;
+}
+
+.btn-perbaikan:hover {
+  background: #e6ac05;
+}
+
+.btn-setujui {
+  background: #0f766e;
+  color: #fff;
+}
+
+.btn-setujui:hover {
+  background: #0c5f58;
+}
+
+.btn-keputusan i {
+  font-size: 1.2rem;
+}
+
+/* warna tombol hijau-biru khas Digital SKP */
+.btn-teal {
+  background: #0f766e;
+  color: #fff;
+  padding: 12px;
+  font-weight: 600;
+  border-radius: 12px;
+}
+.btn-teal:hover {
+  background: #0c5f58;
+  color: #fff;
+}
+
+.btn-kuning {
+  background: #ffc107;
+  color: #fff;
+  padding: 12px;
+  font-weight: 600;
+  border-radius: 12px;
+}
+.btn-kuning:hover {
+  background: #e6ac05;
+  color: #fff;
+}
+
+.modal-content {
+  border-radius: 20px !important;
+}
+
+.modal-content h5 {
+  line-height: 1.5;
+}
+
+.btn-secondary {
+  background: #8f8f8f;
+  color: white;
+  font-weight: 600;
+  padding: 12px;
+  border-radius: 12px;
+}
+.btn-secondary:hover {
+  background: #6e6e6e;
+}
+
+.rm-table {
+  display: none;
+}
+
+.rm-table.is-active {
+  display: table;
+}
+
+/*BARCODE*/
+
+#pdfContainer {
+  position: relative;
+  width: 100%;
+  height: 700px; /* Perbesar tinggi area */
+  overflow: auto;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: #f9f9f9;
+}
+
+/* Iframe PDF */
+#pdfView {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* QR Draggable */
+#qrDrag {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  padding: 12px;
+  background: #e8f7f6;
+  border: 2px dashed #0f766e;
+  border-radius: 12px;
+  cursor: grab;
+  z-index: 10;
+  top: 80px; /* posisi awal */
+  left: 80px;
+}
+#qrDrag:active {
+  cursor: grabbing;
+}
+
+#pdfView {
+  transform: scale(1.1);
+  transform-origin: top left;
+}
