@@ -97,10 +97,17 @@
                    :placeholder="'Judul ' + doc.nama">
         </td>
         <td>
-            <input type="text" :name="'dokumen['+index+'][link_bukti_dukung]'" 
-                   class="form-control form-control-sm" 
-                   x-model="doc.link_bukti_dukung" 
-                   placeholder="Link drive...">
+            <div class="d-flex gap-2 align-items-center">
+                <input type="text" :name="'dokumen['+index+'][link_bukti_dukung]'" 
+                    class="form-control form-control-sm" 
+                    x-model="doc.link_bukti_dukung" 
+                    placeholder="Link drive...">
+                <a :href="doc.link_bukti_dukung" target="_blank" 
+                x-show="doc.link_bukti_dukung.trim() !== ''"
+                class="btn btn-info btn-sm text-white">
+                    <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+            </div>
         </td>
                                 <td class="text-end">
                                     <input type="file" accept="application/pdf" class="d-none" 
@@ -178,6 +185,7 @@ function skpUpload() {
                 { nama: 'Laporan SKP 2', isUploaded: false, isLoading: false, savedPath: '', fileUrl: '', judul_laporan: '', link_bukti_dukung: '' },
                 { nama: 'Laporan SKP 3', isUploaded: false, isLoading: false, savedPath: '', fileUrl: '', judul_laporan: '', link_bukti_dukung: '' },
                 { nama: 'Laporan SKP 4', isUploaded: false, isLoading: false, savedPath: '', fileUrl: '', judul_laporan: '', link_bukti_dukung: '' },
+                { nama: 'Aktifitas Harian eMaster', isUploaded: false, isLoading: false, savedPath: '', fileUrl: '', judul_laporan: '', link_bukti_dukung: '' },
             ];
         },
 

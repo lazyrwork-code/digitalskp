@@ -65,7 +65,7 @@
                             <div class="small text-muted">Dokumen PDF</div>
                         </td>
                         <td>
-                            <input type="text" class="form-control form-control-sm" value="{{ $doc->nama_file }}" disabled />
+                            <input type="text" class="form-control form-control-sm" value="{{ $doc->catatan }}" disabled />
                         </td>
                         <td class="text-center">
                             @if ($doc->link_pendukung)
@@ -138,7 +138,7 @@
           <br />
           <!-- ACTION -->
           <div class="text-end mt-4">
-            <a class="btn btn-secondary px-4" href="dashboard-kepalarm.html"><i class="bi bi-arrow-left"></i>Kembali</a>
+            <a class="btn btn-secondary px-4" href="{{ route('kepala.dashboard') }}"><i class="bi bi-arrow-left"></i>Kembali</a>
           </div>
           <input type="hidden" name="status_baru" id="status_utama_input" value="">
 
