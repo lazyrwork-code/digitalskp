@@ -69,6 +69,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/skp/{id}/perbaikan', [SkpVerifikasiController::class, 'perbaikan']);
         Route::get('/riwayat', [SkpPengajuanController::class, 'indexAdmin'])->name('admin.riwayat');
         Route::get('/riwayat/{id_user}', [SkpPengajuanController::class, 'indexDetailAdmin'])->name('admin.riwayat-user');
+        Route::get('/export-pdf', [DashboardController::class, 'exportPdf'])->name('admin.export.pdf');
     });
 
     // ======================
@@ -89,6 +90,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/skp/riwayat', [SkpPengajuanController::class, 'indexKepala'])->name('kepala.riwayat');
         Route::get('/skp/riwayat/{id_user}', [SkpPengajuanController::class, 'indexDetail'])->name('kepala.riwayat-user');
+        Route::get('/export-pdf', [DashboardController::class, 'exportPdf'])->name('kepala.export.pdf');
     });
 });
 

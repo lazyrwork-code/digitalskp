@@ -114,74 +114,90 @@ class SkpPengajuanController extends Controller
     }
 
     // SIMPAN FINAL KE DATABASE
-   public function store(Request $request)
-    {
-        $request->validate([
-            'tanggal_pengajuan' => 'required|date',
-            'bulan'             => 'required',
-            'tahun'             => 'required',
-            'unit'              => 'required',
-            'dokumen'           => 'required|array',
-        ]);
+public function store(Request $request)
+{
+    $request->validate([
+        'tanggal_pengajuan' => 'required|date',
+        'bulan'             => 'required',
+        'tahun'             => 'required',
+        'unit'              => 'required',
+        'dokumen'           => 'required|array',
+    ]);
 
-        DB::beginTransaction();
-        try {
+    DB::beginTransaction();
+    try {
+        $dokumenPertama = $request->dokumen[0] ?? [];
 
-            // ===== HEADER AMBIL DARI DOKUMEN PERTAMA =====
-            $dokumenPertama = $request->dokumen[0] ?? [];
+        $skp = new \App\Models\SkpPengajuan();
+        $skp->user_id           = auth()->id();
+        $skp->unit              = $request->unit;
+        $skp->bulan             = $request->bulan;
+        $skp->tahun             = $request->tahun;
+        $skp->tanggal_pengajuan = $request->tanggal_pengajuan;
+        $skp->status            = 'verifikasi';
+        $skp->catatan_perbaikan = '-';
+        $skp->judul_laporan     = $dokumenPertama['judul_laporan'] ?? 'Tanpa Judul';
+        $skp->pdf_file          = isset($dokumenPertama['path'])
+                                    ? 'skp_files/' . basename($dokumenPertama['path'])
+                                    : null;
+        $skp->save();
 
-            $judulHeader = $dokumenPertama['judul_laporan'] ?? 'Tanpa Judul';
-            $pdfUtama    = isset($dokumenPertama['path'])
-                ? 'skp_files/' . basename($dokumenPertama['path'])
-                : null;
+        Storage::disk('public')->makeDirectory('skp_files');
 
-            $skp = new \App\Models\SkpPengajuan();
-            $skp->user_id = auth()->id();
-            $skp->unit = $request->unit;
-            $skp->bulan = $request->bulan;
-            $skp->tahun = $request->tahun;
-            $skp->tanggal_pengajuan = $request->tanggal_pengajuan;
-            $skp->status = 'verifikasi';
-            $skp->catatan_perbaikan = '-';
-            $link_bukti_dukung  = $request->dokumen[0]['link_bukti_dukung'] ?? '-';
-            $skp->judul_laporan = $judulHeader;
-            $skp->pdf_file = $pdfUtama;
-            $skp->save();
-
-            // ===== DETAIL DOKUMEN =====
-            foreach ($request->dokumen as $item) {
-
-                if (!empty($item['path'])) {
-
-                    $oldPath = $item['path'];
-                    $newPath = 'skp_files/' . basename($oldPath);
-
-                    if (Storage::disk('public')->exists($oldPath)) {
-
-                        Storage::disk('public')->makeDirectory('skp_files');
-                        Storage::disk('public')->move($oldPath, $newPath);
-
-                        $dokumen = new \App\Models\SkpDokumen();
-                        $dokumen->skp_id = $skp->id;
-                        $dokumen->nama_file = $item['nama'] ?? 'Tanpa Nama';
-                        $dokumen->link_pendukung = $item['link_bukti_dukung'] ?? '-';
-                        $dokumen->tipe = 'pdf';
-                        $dokumen->url = $newPath;
-                        $dokumen->catatan = $item['judul_laporan'] ?? '-';
-                        $dokumen->url_signed = '-';
-                        $dokumen->save();
-                    }
+        
+        foreach ($request->dokumen as $item) {
+            
+            // --- Dokumen UTAMA ---
+            if (!empty($item['path'])) {
+                $oldPath = $item['path'];
+                $newPath = 'skp_files/' . uniqid() . '_' . basename($oldPath);
+                
+                if (Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->move($oldPath, $newPath);
+                    
+                    \App\Models\SkpDokumen::create([
+                        'skp_id'         => $skp->id,
+                        'nama_file'      => $item['judul_laporan'] ?? $item['nama'] ?? '-', // judul kegiatan
+                        'link_pendukung' => $item['link_bukti_dukung'] ?? '-',
+                        'tipe'           => 'pdf',
+                        'url'            => $newPath,
+                        'catatan'        => '-',
+                        'url_signed'     => '-',
+                        'isttd'          => 0,
+                    ]);
                 }
             }
 
-            DB::commit();
-            return redirect()->route('redirect.role')->with('success', 'Berhasil!');
+            // --- Aktivitas Harian eMaster (INI YANG DITAMBAHKAN) ---
+            if (!empty($item['aktivitas_path'])) {
+                $oldPath = $item['aktivitas_path'];
+                $newPath = 'skp_files/' . uniqid() . '_' . basename($oldPath);
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            dd("Gagal simpan: " . $e->getMessage());
+                if (Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->move($oldPath, $newPath);
+
+                    \App\Models\SkpDokumen::create([
+                        'skp_id'         => $skp->id,
+                        'nama_file'      => 'Aktivitas Harian eMaster - ' . ($item['nama'] ?? ''),
+                        'link_pendukung' => $item['link_bukti_dukung'] ?? '-',
+                        'tipe'           => 'pdf',
+                        'url'            => $newPath,
+                        'catatan'        => $item['judul_laporan'] ?? '-',
+                        'url_signed'     => '-',
+                        'isttd'          => 0,
+                    ]);
+                }
+            }
         }
+
+        DB::commit();
+        return redirect()->route('redirect.role')->with('success', 'Pengajuan SKP berhasil dikirim!');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->with('error', 'Gagal simpan: ' . $e->getMessage());
     }
+}
 
 
     // DETAIL

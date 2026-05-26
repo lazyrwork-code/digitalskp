@@ -3,7 +3,7 @@
 ========================= */
 :root {
   --primary: #0f766e;
-  --bg-app: #f6fbfa;
+  --bg-app: #ffffff;
 
   --sidebar-width: 260px;
   --sidebar-collapsed: 80px;
@@ -367,75 +367,340 @@ body {
   color: #fff;
 }
 
-/*
-LOGIN
-*/
+/* ═══════════════════════════════════════════
+   LOGIN PAGE
+═══════════════════════════════════════════ */
 
-.login-wrapper {
-  height: 100vh;
+/* Warna brand RSUD Dr. Soetomo */
+:root {
+  --rsud-green:        #1D9E75;
+  --rsud-green-dark:   #0F6E56;
+  --rsud-green-light:  #E1F5EE;
+  --rsud-yellow:       #EF9F27;
+  --rsud-yellow-dark:  #BA7517;
+  --rsud-gradient:     linear-gradient(135deg, #0F6E56 0%, #1D9E75 50%, #3db88a 100%);
 }
 
-/* LEFT SIDE */
-.login-left {
-  width: 50%;
-  background: #ffffff;
-}
-
-.login-input .input-group-text {
-  background: #f1f5f9;
-  border: none;
-}
-
-.login-input .form-control {
-  background: #f1f5f9;
-  border: none;
-  padding: 12px;
-  border-radius: 0 10px 10px 0;
-}
-
-.login-input input:focus {
-  box-shadow: none;
-}
-
-/* LOGIN BUTTON */
-.btn-login {
-  background: #0f766e;
-  color: #fff;
-  padding: 12px;
-  font-weight: 600;
-  border-radius: 10px;
-}
-
-.btn-login:hover {
-  background: #0c5f58;
-  color: #fff;
-}
-
-/* SOCIAL BUTTON */
-.btn-social {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  padding: 10px;
-  border-radius: 10px;
-  font-weight: 500;
-}
-
-.btn-social:hover {
-  background: #f1f5f9;
-}
-
-/* RIGHT SIDE */
-.login-right {
-  width: 50%;
-  background: linear-gradient(135deg, #0f766e, #0c5f58);
-  display: flex;
-}
-
-.login-image-box {
-  width: 70%;
-  border-radius: 20px;
+body.login-body {
+  background: var(--rsud-gradient) !important;
+  min-height: 100vh;
   overflow: hidden;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+/* Canvas partikel di belakang semua */
+#particles-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Body */
+.login-wrapper {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Wrapper split layout */
+.login-wrapper {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Panel Kiri (Form) ───────────────────── */
+.login-left {
+  flex: 1;                          
+  display: flex;
+  align-items: center;
+  justify-content: center;         
+  padding: 2rem;
+  background: transparent;
+}
+
+/* Card glassmorphism */
+.login-card {
+  width: 100%;
+  max-width: 420px;              
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 8px 32px rgba(15, 110, 86, 0.18),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 2.5rem 2rem;
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Logo */
+.login-logo {
+  max-height: 72px;
+  object-fit: contain;
+  animation: fadeIn 0.8s ease 0.2s both;
+}
+
+/* Logo wrapper — putih solid agar kontras */
+.logo-right-wrapper {
+  /* background: rgba(0, 0, 0, 0.25); */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0);
+  border-radius: 2rem;
+  padding: 2.5rem 3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2); */
+  /* transition: transform 0.4s ease, box-shadow 0.4s ease; */
+}
+
+.logo-right-wrapper:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Judul & subtitle */
+.login-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--rsud-green-dark);
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.login-subtitle {
+  font-size: 0.9rem;
+  color: #555;
+  text-align: center;
+  min-height: 1.4em;
+  margin-bottom: 1.5rem;
+}
+.login-illustration {
+  max-width: 260px;
+  width: 100%;
+  filter: none;           
+}
+.login-subtitle::after {
+  content: '|';
+  animation: blink 0.8s step-end infinite;
+  color: var(--rsud-green);
+  margin-left: 1px;
+}
+.login-tagline h5 {
+  font-size: 1.1rem;
+  letter-spacing: 0.3px;
+}
+
+.login-tagline p {
+  font-size: 0.88rem;
+}
+
+/* ── SVG Ilustrasi Kanan ─────────────────── */
+.login-svg-illustration {
+  width: 100%;
+  max-width: 360px;
+  display: block;
+  margin: 0 auto;
+  filter: drop-shadow(0 8px 32px rgba(0,0,0,0.15));
+}
+
+/* Pulse pada palang medis */
+.svg-pulse {
+  transform-origin: 210px 210px;
+  animation: svgPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes svgPulse {
+  0%, 100% { transform: scale(1);    opacity: 1; }
+  50%       { transform: scale(1.07); opacity: 0.85; }
+}
+
+/* Garis EKG draw animation */
+.svg-ecg polyline {
+  animation: ecgDraw 2.8s ease-in-out infinite;
+}
+
+@keyframes ecgDraw {
+  0%   { stroke-dashoffset: 500; opacity: 0; }
+  20%  { opacity: 1; }
+  70%  { stroke-dashoffset: 0;   opacity: 1; }
+  90%  { opacity: 0; }
+  100% { stroke-dashoffset: 500; opacity: 0; }
+}
+
+/* Float ikon dekoratif */
+.svg-float-1 {
+  animation: svgFloat 3.5s ease-in-out infinite;
+}
+.svg-float-2 {
+  animation: svgFloat 4.2s ease-in-out infinite reverse;
+}
+.svg-float-3 {
+  animation: svgFloat 5s ease-in-out infinite 0.8s;
+}
+
+@keyframes svgFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* Input group */
+.input-group-login .input-group-text {
+  background: var(--rsud-green-light);
+  border-color: #c8e6dc;
+  color: var(--rsud-green-dark);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.input-group-login .form-control {
+  border-color: #c8e6dc;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-group-login .form-control:focus {
+  border-color: var(--rsud-green);
+  box-shadow: 0 0 0 3px rgba(29, 158, 117, 0.15);
+}
+
+.input-group-login:focus-within .input-group-text {
+  background: #b5f0dc;
+  border-color: var(--rsud-green);
+}
+
+/* Toggle password button */
+.toggle-password {
+  background: var(--rsud-green-light) !important;
+  border-color: #c8e6dc !important;
+  color: var(--rsud-green-dark) !important;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-left: none !important;
+}
+
+.toggle-password:hover {
+  background: #b5f0dc !important;
+}
+
+/* Lupa password link */
+.lupa-password {
+  font-size: 0.82rem;
+  color: var(--rsud-green);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.lupa-password:hover {
+  color: var(--rsud-green-dark);
+  text-decoration: underline;
+}
+
+/* Tombol Login */
+.btn-login {
+  background: var(--rsud-gradient);
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  padding: 0.7rem 1rem;
+  border-radius: 0.6rem;
+  font-size: 0.95rem;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+  box-shadow: 0 4px 14px rgba(29, 158, 117, 0.35);
+}
+
+.btn-login:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(29, 158, 117, 0.45);
+  filter: brightness(1.05);
+  color: #fff;
+}
+
+.btn-login:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(29, 158, 117, 0.3);
+}
+
+.btn-login:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+/* Footer teks */
+.login-footer-text {
+  font-size: 0.78rem;
+  color: #888;
+  text-align: center;
+  margin-bottom: 0;
+}
+
+/* ── Panel Kanan (Ilustrasi) ─────────────── */
+.login-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.login-right-content {
+  text-align: center;
+  animation: fadeIn 0.9s ease 0.3s both;
+}
+
+.login-illustration {
+  max-width: 420px;
+  width: 100%;
+  filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.2));
+  transition: transform 0.4s ease;
+}
+
+.login-illustration:hover {
+  transform: translateY(-6px) scale(1.02);
+}
+
+/* ── Responsive ──────────────────────────── */
+@media (max-width: 768px) {
+  .login-wrapper {
+    flex-direction: column;
+  }
+
+  .login-left {
+    max-width: 100%;
+    padding: 1.5rem 1rem;
+    backdrop-filter: none;
+  }
+
+  .login-card {
+    padding: 2rem 1.25rem;
+    border-radius: 1.25rem;
+  }
+
+  .login-right {
+    display: none;
+  }
 }
 
 /*Font Tabel*/

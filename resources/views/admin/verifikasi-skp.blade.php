@@ -42,6 +42,14 @@
         
         <div class="bg-white p-4 rounded-4">
             <h5 class="fw-bold mb-3">Dokumen SKP</h5>
+
+            @php
+                $dokumenUtama = collect($dokumen)->filter(fn($d) => !str_starts_with($d->nama_file, 'Aktivitas Harian eMaster'));
+                $dokumenAktivitas = collect($dokumen)
+                    ->filter(fn($d) => str_starts_with($d->nama_file, 'Aktivitas Harian eMaster'))
+                    ->keyBy(fn($d) => trim(str_replace('Aktivitas Harian eMaster -', '', $d->nama_file)));
+            @endphp
+
             <div class="table-responsive">
                 <table class="table align-middle">
                     <thead>
@@ -50,56 +58,94 @@
                             <th>Nama Dokumen</th>
                             <th>Kegiatan Tugas Jabatan</th>
                             <th>Link Bukti Dukung</th>
-                            <th>Laporan Realisasi Kegiatan</th>
+                            <th class="text-center">Aktivitas Harian eMaster</th>
+                            <th class="text-center">Laporan Realisasi Kegiatan</th>
                             <th>Keterangan Koreksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($dokumen as $index => $doc)
+                        @php
+                            $namaFix = [
+                                0 => 'Catatan Harian Kerja',
+                                1 => 'Laporan SKP 1',
+                                2 => 'Laporan SKP 2',
+                                3 => 'Laporan SKP 3',
+                                4 => 'Laporan SKP 4',
+                            ];
+
+                            $dokumenUtama = collect($dokumen)
+                                ->filter(fn($d) => $d->catatan !== 'aktivitas_harian' && !str_starts_with($d->catatan ?? '', '[KOREKSI_AKT]'))
+                                ->values();
+
+                            $dokumenAktivitas = collect($dokumen)
+                                ->filter(fn($d) => $d->catatan === 'aktivitas_harian')
+                                ->values();
+                        @endphp
+                        @forelse($dokumenUtama as $i => $doc)
                         <tr>
-                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $loop->iteration }}</td>
+                            
+                            {{-- Nama Dokumen hardcode --}}
                             <td>
-                                <strong>{{ $doc->kategori_dokumen ?? 'Dokumen' }}</strong>
-                                <div class="small text-muted">{{ $doc->nama_file }}</div>
+                                <strong>{{ $namaFix[$i] ?? 'Dokumen' }}</strong>
+                                <div class="small text-muted">Dokumen PDF</div>
                             </td>
+
+                            {{-- Kegiatan Tugas Jabatan dari nama_file --}}
                             <td>
-                                <input type="text" class="form-control form-control-sm" value="{{ $doc->catatan }}" disabled />
+                                <input type="text" class="form-control form-control-sm"
+                                    value="{{ $doc->nama_file }}" disabled />
                             </td>
+
                             <td class="text-center">
-                                @if($doc->link_pendukung)
+                                @if($doc->link_pendukung && $doc->link_pendukung !== '-')
                                     <a href="{{ $doc->link_pendukung }}" target="_blank" class="btn btn-info btn-sm text-white">
                                         <i class="bi bi-link-45deg"></i>
                                     </a>
                                 @else
-                                    <span class="text-muted small">N/A</span>
+                                    <span class="text-muted small">-</span>
                                 @endif
                             </td>
+
+                            {{-- Aktivitas Harian berdasarkan index --}}
+                            <td class="text-center">
+                                @php $aktivitas = $i > 0 ? ($dokumenAktivitas[$i - 1] ?? null) : null; @endphp
+                                @if($aktivitas)
+                                    <a href="{{ asset('storage/'.$aktivitas->url) }}" target="_blank" class="btn btn-info btn-sm text-white">
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                    </a>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+
                             <td class="text-center">
                                 @if($doc->url)
-                                    <a href="{{ asset('storage/' . $doc->url) }}" target="_blank" class="btn btn-info btn-sm text-white">
+                                    <a href="{{ asset('storage/'.$doc->url) }}" target="_blank" class="btn btn-info btn-sm text-white">
                                         <i class="bi bi-file-earmark-pdf"></i>
                                     </a>
                                 @else
                                     <span class="text-danger small">No File</span>
                                 @endif
                             </td>
-                            <td class="text-center">
+
+                            {{-- Keterangan Koreksi --}}
+                            <td class="text-start">
                                 <div class="koreksi-wrapper">
-                                    <button type="button" class="btn btn-warning btn-sm koreksi-btn {{ $doc->catatan ? 'd-none' : '' }}">
+                                    <button type="button" class="btn btn-warning btn-sm koreksi-btn">
                                         <i class="bi bi-pencil"></i> Koreksi
                                     </button>
-                                    
-                                    <div class="koreksi-edit {{ $doc->catatan ? '' : 'd-none' }}">
-                                        {{-- Key array menggunakan ID dokumen --}}
-                                        <textarea name="koreksi[{{ $doc->id }}]" class="form-control koreksi-text" rows="2" placeholder="Tulis alasan perbaikan...">{{ $doc->catatan }}</textarea>
-                                        <button type="button" class="btn btn-outline-danger btn-sm koreksi-cancel mt-2">Batal Koreksi</button>
+                                    <div class="koreksi-edit d-none">
+                                        <textarea class="form-control koreksi-text" rows="2"
+                                            name="koreksi[{{ $doc->id }}]"></textarea>
+                                        <button type="button" class="btn btn-outline-danger btn-sm koreksi-cancel mt-2">Batal</button>
                                     </div>
                                 </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center text-muted p-4">Tidak ada dokumen yang ditemukan untuk pengajuan ini.</td>
+                            <td colspan="7" class="text-center text-muted p-4">Tidak ada dokumen.</td>
                         </tr>
                         @endforelse
                     </tbody>

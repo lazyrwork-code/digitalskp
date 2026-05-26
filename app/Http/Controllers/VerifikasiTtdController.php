@@ -256,40 +256,50 @@ public function updateStatus(Request $request, $id)
 
     if ($request->status_baru == 'perbaikan') {
 
-        $skp->update([
-            'status' => 'perbaikan'
-        ]);
+        $skp->update(['status' => 'perbaikan']);
 
         if ($request->has('koreksi')) {
             foreach ($request->koreksi as $docId => $pesan) {
-
                 if (!empty($pesan)) {
                     $dokumen = SkpDokumen::find($docId);
-
                     if ($dokumen) {
-                        $dokumen->update([
-                            'catatan' => $pesan
-                        ]);
+                        $dokumen->update(['nama_file' => '[KOREKSI] ' . $pesan]);
+
+                        // Aktivitas harian pasangannya
+                        // Ambil berdasarkan urutan index di skp yang sama
+                        $allDokumen = SkpDokumen::where('skp_id', $id)->get();
+                        $utamaList = $allDokumen->filter(fn($d) => $d->catatan !== 'aktivitas_harian')->values();
+                        $aktivitasList = $allDokumen->filter(fn($d) => $d->catatan === 'aktivitas_harian')->values();
+                        
+                        $utamaIndex = $utamaList->search(fn($d) => $d->id === $dokumen->id);
+                        if ($utamaIndex > 0) { // index 0 = catatan harian, tidak punya aktivitas
+                            $aktivitas = $aktivitasList[$utamaIndex - 1] ?? null;
+                            if ($aktivitas) {
+                                $aktivitas->update(['nama_file' => '[KOREKSI] ' . $pesan]);
+                            }
+                        }
                     }
                 }
             }
         }
 
-        return redirect()->route('admin.dashboard')
-            ->with('success', 'SKP dikembalikan.');
+        return redirect()->route('kepala.dashboard')
+            ->with('success', 'SKP dikembalikan untuk perbaikan.');
     }
 
     if ($request->status_baru == 'menungguttd') {
 
-        SkpDokumen::where('skp_id', $id)->update([
-            'catatan' => null
-        ]);
+        // Hanya reset yang berisi koreksi, judul kegiatan tetap aman
+        $dokumenList = SkpDokumen::where('skp_id', $id)->get();
+        foreach ($dokumenList as $dok) {
+            if (str_starts_with($dok->catatan ?? '', '[KOREKSI]')) {
+                $dok->update(['catatan' => $dok->nama_file]);
+            }
+        }
 
-        $skp->update([
-            'status' => 'menungguttd'
-        ]);
+        $skp->update(['status' => 'menungguttd']);
 
-        return redirect()->route('admin.dashboard')
+        return redirect()->route('kepala.dashboard')
             ->with('success', 'SKP menunggu tanda tangan.');
     }
 
@@ -307,9 +317,7 @@ public function updateStatus(Request $request, $id)
                 ->with('error', 'Masih ada dokumen belum TTD.');
         }
 
-        $skp->update([
-            'status' => 'selesai'
-        ]);
+        $skp->update(['status' => 'selesai']);
 
         return redirect()->route('kepala.dashboard')
             ->with('success', 'SKP selesai.');

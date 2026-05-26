@@ -48,122 +48,147 @@
         </div>
         </div>
 
-        <!-- DOKUMEN -->
+        <!-- UPLOAD DOKUMEN -->
         <div class="bg-white p-4 rounded-4">
-        <h5 class="fw-bold mb-3">Dokumen SKP</h5>
+            <h5 class="fw-bold mb-3">Upload Dokumen SKP</h5>
 
-        <div class="table-responsive">
-            <table class="table align-middle">
-            <thead>
-                <tr>
-                <th width="40">No</th>
-                <th>Nama Dokumen</th>
-                <th>Kegiatan Tugas Jabatan</th>
-                <th>Link Bukti Dukung</th>
-                <th class="text-end">Laporan Realisasi Kegiatan</th>
-                <th>Keterangan Koreksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                <td>1</td>
-                <td>
-                    Catatan Kinerja Harian
-                    <div class="small text-muted">Dokumen PDF</div>
-                </td>
-                <td>
-                    <input type="text" class="form-control form-control-sm" placeholder="Ketikkan judul Logbook" value="Logbook 2025" disabled />
-                </td>
-                <td class="text-center">
-                    <button class="btn btn-info btn-sm text-white"><i class="bi bi-file-medical"></i></button>
-                </td>
-                <td class="text-center">
-                    <button class="btn btn-info btn-sm text-white"><i class="bi bi-file-medical"></i></button>
-                </td>
-                <td>
-                    <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" disabled>Seharusnya tanggal 20 tanggal merah</textarea>
-                </td>
-                </tr>
+            @php
+                $dokumenUtama = $skp->dokumen->filter(fn($d) => !str_starts_with($d->nama_file, 'Aktivitas Harian eMaster'));
+                $dokumenAktivitas = $skp->dokumen
+                    ->filter(fn($d) => str_starts_with($d->nama_file, 'Aktivitas Harian eMaster'))
+                    ->keyBy(fn($d) => trim(str_replace('Aktivitas Harian eMaster -', '', $d->nama_file)));
+            @endphp
 
-                <tr>
-                <td>2</td>
-                <td>
-                    Laporan SKP 1
-                    <div class="small text-muted">Dokumen PDF</div>
-                </td>
-                <td>
-                    <input type="text" class="form-control form-control-sm" value="Logbook 2025" disabled />
-                </td>
-                <td class="text-center">
-                    <button class="btn btn-info btn-sm text-white"><i class="bi bi-file-medical"></i></button>
-                </td>
-                <td class="text-center">
-                    <button class="btn btn-info btn-sm text-white"><i class="bi bi-file-medical"></i></button>
-                </td>
-                <td></td>
-                </tr>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th width="40">No</th>
+                            <th>Nama Dokumen</th>
+                            <th>Kegiatan Tugas Jabatan</th>
+                            <th>Link Bukti Dukung</th>
+                            <th>Keterangan Koreksi</th>
+                            <th class="text-center">Aktivitas Harian eMaster</th>
+                            <th class="text-center">Laporan Realisasi Kegiatan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($dokumenUtama as $i => $doc)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
 
-                <tr>
-                <td>3</td>
-                <td>
-                    Laporan SKP 2
-                    <div class="small text-muted">Dokumen PDF</div>
-                </td>
-                <td>
-                    <input type="text" class="form-control form-control-sm" value="Logbook 2025" disabled />
-                </td>
-                <td class="text-center">
-                    <button class="btn btn-info btn-sm text-white"><i class="bi bi-file-medical"></i></button>
-                </td>
-                <td class="text-center">
-                    <button class="btn btn-info btn-sm text-white"><i class="bi bi-file-medical"></i></button>
-                </td>
-                <td class="text-center"></td>
-                </tr>
+                            <td>
+                                {{ $doc->nama_file }}
+                                <div class="small text-muted">Dokumen PDF</div>
+                            </td>
 
-                <tr>
-                <td>4</td>
-                <td>
-                    Laporan SKP 3
-                    <div class="small text-muted">Dokumen PDF</div>
-                </td>
-                <td>
-                    <input type="text" class="form-control form-control-sm" value="Logbook 2025" disabled />
-                </td>
-                <td class="text-center">
-                    <button class="btn btn-info btn-sm text-white"><i class="bi bi-file-medical"></i></button>
-                </td>
-                <td class="text-center">
-                    <button class="btn btn-info btn-sm text-white"><i class="bi bi-file-medical"></i></button>
-                </td>
-                <td class="text-center"></td>
-                </tr>
+                            {{-- JUDUL LAPORAN --}}
+                            <td>
+                                <input type="text"
+                                    class="form-control form-control-sm"
+                                    name="judul_laporan[{{ $doc->id }}]"
+                                    value="{{ $doc->nama_file }}"
+                                    {{ $doc->catatan && $doc->catatan !== '-' ? '' : 'disabled' }}>
+                            </td>
 
-                <tr>
-                <td>5</td>
-                <td>
-                    Laporan SKP 4
-                    <div class="small text-muted">Dokumen PDF</div>
-                </td>
-                <td>
-                    <input type="text" class="form-control form-control-sm" value="Logbook 2025" disabled />
-                </td>
-                <td class="text-center">
-                    <button class="btn btn-info btn-sm text-white"><i class="bi bi-file-medical"></i></button>
-                </td>
-                <td class="text-center">
-                    <button class="btn btn-info btn-sm text-white"><i class="bi bi-file-medical"></i></button>
-                </td>
-                <td class="text-center"></td>
-                </tr>
-            </tbody>
-            </table>
-        </div>
+                            {{-- LINK BUKTI --}}
+                            <td class="text-center">
+                                @if($doc->catatan && $doc->catatan !== '-')
+                                    <input type="text"
+                                        class="form-control form-control-sm"
+                                        name="link_pendukung[{{ $doc->id }}]"
+                                        value="{{ $doc->link_pendukung }}">
+                                @else
+                                    <a href="{{ $doc->link_pendukung }}" target="_blank"
+                                    class="btn btn-info btn-sm text-white">
+                                        <i class="bi bi-file-medical"></i>
+                                    </a>
+                                @endif
+                            </td>
 
-        <!-- ACTION -->
-        <div class="text-end mt-4">
-            <a class="btn btn-secondary px-4" href="dashboard-admin.html"><i class="bi bi-arrow-left"></i>Kembali</a>
-        </div>
+                            {{-- KOREKSI --}}
+                            <td>
+                                @if($doc->catatan && $doc->catatan !== '-')
+                                    <textarea class="form-control form-control-sm" rows="2" disabled>{{ $doc->catatan }}</textarea>
+                                @else
+                                    <span class="text-muted small">-</span>
+                                @endif
+                            </td>
+
+                            {{-- AKTIVITAS HARIAN --}}
+                            <td class="text-center">
+                                @php $aktivitas = $dokumenAktivitas[$doc->nama_file] ?? null; @endphp
+                                @if($aktivitas)
+                                    @if($doc->catatan && $doc->catatan !== '-')
+                                        <label class="btn btn-warning btn-sm text-white me-1 mb-0">
+                                            <template x-if="!dokumenList[{{ $loop->index }}].aktivitasLoading">
+                                                <span><i class="bi bi-pencil"></i> Ubah</span>
+                                            </template>
+                                            <template x-if="dokumenList[{{ $loop->index }}].aktivitasLoading">
+                                                <span><span class="spinner-border spinner-border-sm"></span> Uploading...</span>
+                                            </template>
+                                            <input type="file" hidden
+                                                @change="handleFileUpload($event, {{ $loop->index }}, {{ $aktivitas->id }}, 'aktivitas')">
+                                        </label>
+                                        <input type="hidden"
+                                            :name="'dokumen[{{ $aktivitas->id }}][path]'"
+                                            x-model="dokumenList[{{ $loop->index }}].aktivitasPath">
+                                    @endif
+                                    <a :href="dokumenList[{{ $loop->index }}]?.aktivitasUploaded ? dokumenList[{{ $loop->index }}].aktivitasUrl : '{{ asset('storage/' . $aktivitas->url) }}'"
+                                    target="_blank"
+                                    class="btn btn-sm"
+                                    :class="dokumenList[{{ $loop->index }}]?.aktivitasUploaded ? 'btn-success text-white' : 'btn-outline-primary'">
+                                        <i class="bi bi-eye"></i>
+                                        <span x-text="dokumenList[{{ $loop->index }}]?.aktivitasUploaded ? 'Lihat (Baru)' : 'Lihat'"></span>
+                                    </a>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+
+                            {{-- LAPORAN REALISASI --}}
+                            <td class="text-center">
+                                @if($doc->catatan && $doc->catatan !== '-')
+                                    <label class="btn btn-warning btn-sm text-white me-1 mb-0">
+                                        <template x-if="!dokumenList[{{ $loop->index }}].isLoading">
+                                            <span><i class="bi bi-pencil"></i> Ubah</span>
+                                        </template>
+                                        <template x-if="dokumenList[{{ $loop->index }}].isLoading">
+                                            <span><span class="spinner-border spinner-border-sm"></span> Uploading...</span>
+                                        </template>
+                                        <input type="file" hidden
+                                            @change="handleFileUpload($event, {{ $loop->index }}, {{ $doc->id }}, 'utama')">
+                                    </label>
+                                    <input type="hidden"
+                                        :name="'dokumen[{{ $doc->id }}][path]'"
+                                        x-model="dokumenList[{{ $loop->index }}].savedPath">
+                                @endif
+                                <a :href="dokumenList[{{ $loop->index }}]?.isUploaded ? dokumenList[{{ $loop->index }}].fileUrl : '{{ asset('storage/' . $doc->url) }}'"
+                                target="_blank"
+                                class="btn btn-sm"
+                                :class="dokumenList[{{ $loop->index }}]?.isUploaded ? 'btn-success text-white' : 'btn-outline-primary'">
+                                    <i class="bi bi-eye"></i>
+                                    <span x-text="dokumenList[{{ $loop->index }}]?.isUploaded ? 'Lihat (Baru)' : 'Lihat'"></span>
+                                </a>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">Tidak ada dokumen SKP</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a href="{{ route('redirect.role') }}" class="btn btn-secondary px-4">
+                    <i class="bi bi-arrow-left"></i> Kembali
+                </a>
+                <button type="submit" class="btn btn-primary px-4 shadow" :disabled="!canSubmit()">
+                    <i class="bi bi-send"></i> Kirim Pengajuan SKP
+                </button>
+            </div>
         </div>
     </div>
 @endsection

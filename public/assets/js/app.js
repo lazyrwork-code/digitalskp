@@ -1,9 +1,11 @@
 const toggleBtn = document.getElementById("toggleSidebar");
 const sidebar = document.getElementById("sidebar");
 
-toggleBtn.addEventListener("click", () => {
-  sidebar.classList.toggle("collapsed");
-});
+if (toggleBtn && sidebar) {
+  toggleBtn.addEventListener("click", () => {
+    sidebar.classList.toggle("collapsed");
+  });
+}
 
 document.addEventListener("DOMContentLoaded", function () {
   const statusCards = document.querySelectorAll(".status-card");
@@ -77,10 +79,13 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-document.getElementById("btnOpenModal").addEventListener("click", function () {
-  const modal = new bootstrap.Modal(document.getElementById("modalKembalikan"));
-  modal.show();
-});
+const btnOpenModal = document.getElementById("btnOpenModal");
+if (btnOpenModal) {
+  btnOpenModal.addEventListener("click", function () {
+    const modal = new bootstrap.Modal(document.getElementById("modalKembalikan"));
+    modal.show();
+  });
+}
 
 function initKepalaRM() {
   const rmCards = document.querySelectorAll(".rm-card");

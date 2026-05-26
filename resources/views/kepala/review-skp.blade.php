@@ -40,85 +40,132 @@
         <form action="{{ route('kepala.skp.update-status', $skp->id) }}" method="POST">
             @csrf
             @method('PUT')
-          <div class="bg-white p-4 rounded-4">
-            <h5 class="fw-bold mb-3">Dokumen SKP</h5>
+            
+            <div class="bg-white p-4 rounded-4">
+                <h5 class="fw-bold mb-3">Dokumen SKP</h5>
 
-            <div class="table-responsive">
-              <table class="table align-middle">
-                <thead>
-                  <tr>
-                    <th width="40">No</th>
-                    <th>Nama Dokumen</th>
-                    <th>Kegiatan Tugas Jabatan</th>
-                    <th>Link Bukti Dukung</th>
-                    <th>Laporan Realisasi Kegiatan</th>
-                    <th>Keterangan Koreksi</th>
-                    <th>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                    @foreach($skp->dokumen as $index => $doc)
-                    <tr>
-                        <td>{{ $index + 1 }}</td>
-                        <td>
-                            {{ $doc->nama_file }}
-                            <div class="small text-muted">Dokumen PDF</div>
-                        </td>
-                        <td>
-                            <input type="text" class="form-control form-control-sm" value="{{ $doc->catatan }}" disabled />
-                        </td>
-                        <td class="text-center">
-                            @if ($doc->link_pendukung)
-                                <a href="{{ $doc->link_pendukung }}"
-                                target="_blank"
-                                class="btn btn-info btn-sm text-white">
-                                    <i class="bi bi-file-medical"></i>
-                                </a>
-                            @else
-                                <span class="text-muted">-</span>
-                            @endif
-                        </td>
-                        <td class="text-center">
-                            <a href="{{ asset('storage/'.$doc->url) }}" target="_blank" class="btn btn-info btn-sm text-white">
-                                <i class="bi bi-file-earmark-pdf"></i>
-                            </a>
-                        </td>
-                        <td class="text-start">
-                            <div class="koreksi-wrapper">
-                                <button type="button". class="btn btn-warning btn-sm koreksi-btn"><i class="bi bi-pencil"></i> Koreksi</button>
-                                <div class="koreksi-edit d-none">
-                                    <textarea class="form-control koreksi-text" rows="2" name="koreksi[{{ $doc->id }}]">{{ $doc->catatan_koreksi }}</textarea>
-                                    <button type="button" class="btn btn-outline-danger btn-sm koreksi-cancel mt-2">Batal</button>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="text-end">
-                            @if(!$doc->isttd)
-                                <button 
-                                    type="button"
-                                    class="btn btn-prima btn-sm"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#modalTTD"
-                                    data-file="{{ asset('storage/'.$doc->url) }}"
-                                    data-doc="{{ $doc->id }}">
-                                    Tanda Tangani
-                                </button>
-                            @else
-                                <a 
-                                    href="{{ asset('storage/'.$doc->url_signed) }}" 
-                                    target="_blank"
-                                    class="btn btn-success btn-sm">
-                                    Lihat Dokumen
-                                </a>
-                            @endif
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-              </table>
+                @php
+                    $dokumenUtama = $skp->dokumen->filter(fn($d) => !str_starts_with($d->nama_file, 'Aktivitas Harian eMaster'));
+                    $dokumenAktivitas = $skp->dokumen
+                        ->filter(fn($d) => str_starts_with($d->nama_file, 'Aktivitas Harian eMaster'))
+                        ->keyBy(fn($d) => trim(str_replace('Aktivitas Harian eMaster -', '', $d->nama_file)));
+                @endphp
+
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th width="40">No</th>
+                                <th>Nama Dokumen</th>
+                                <th>Kegiatan Tugas Jabatan</th>
+                                <th>Link Bukti Dukung</th>
+                                <th class="text-center">Aktivitas Harian eMaster</th>
+                                <th class="text-center">Laporan Realisasi Kegiatan</th>
+                                <th>Keterangan Koreksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($dokumenUtama as $doc)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>
+                                    {{ $doc->nama_file }}
+                                    <div class="small text-muted">Dokumen PDF</div>
+                                </td>
+                                {{-- KEGIATAN TUGAS JABATAN --}}
+                                <td>
+                                    @php
+                                        $isKoreksi = str_starts_with($doc->catatan ?? '', '[KOREKSI]');
+                                        $judulKegiatan = $isKoreksi ? $doc->nama_file : $doc->catatan;
+                                    @endphp
+                                    <input type="text" class="form-control form-control-sm" 
+                                        value="{{ $judulKegiatan }}" disabled />
+                                </td>
+
+                                {{-- LINK BUKTI DUKUNG --}}
+                                <td class="text-center">
+                                    @if ($doc->link_pendukung && $doc->link_pendukung !== '-')
+                                        <a href="{{ $doc->link_pendukung }}" target="_blank" class="btn btn-info btn-sm text-white">
+                                            <i class="bi bi-file-medical"></i>
+                                        </a>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+
+                                {{-- AKTIVITAS HARIAN --}}
+                                <td class="text-center">
+                                    @php $aktivitas = $dokumenAktivitas[$doc->nama_file] ?? null; @endphp
+                                    @if($aktivitas)
+                                        @if(!$aktivitas->isttd)
+                                            <button
+                                                type="button"
+                                                class="btn btn-primary btn-sm"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalTTD"
+                                                data-file="{{ asset('storage/'.$aktivitas->url) }}"
+                                                data-doc="{{ $aktivitas->id }}">
+                                                <i class="bi bi-pen me-1"></i> Tanda Tangani Dokumen
+                                            </button>
+                                        @else
+                                            <a href="{{ asset('storage/'.$aktivitas->url_signed) }}"
+                                            target="_blank"
+                                            class="btn btn-success btn-sm">
+                                                <i class="bi bi-file-earmark-check me-1"></i> Lihat Dokumen
+                                            </a>
+                                        @endif
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+
+                                {{-- LAPORAN REALISASI --}}
+                                <td class="text-center">
+                                    @if(!$doc->isttd)
+                                        <button
+                                            type="button"
+                                            class="btn btn-success btn-sm text-white"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalTTD"
+                                            data-file="{{ asset('storage/'.$doc->url) }}"
+                                            data-doc="{{ $doc->id }}">
+                                            <i class="bi bi-pen me-1"></i> Tanda Tangani Dokumen
+                                        </button>
+                                    @else
+                                        <a href="{{ asset('storage/'.$doc->url_signed) }}"
+                                        target="_blank"
+                                        class="btn btn-success btn-sm">
+                                            <i class="bi bi-file-earmark-check me-1"></i> Lihat Dokumen
+                                        </a>
+                                    @endif
+                                </td>
+
+                                {{-- KETERANGAN KOREKSI --}}
+                                <td class="text-start">
+                                    <div class="koreksi-wrapper">
+                                        <button type="button" class="btn btn-warning btn-sm koreksi-btn">
+                                            <i class="bi bi-pencil"></i> Koreksi
+                                        </button>
+                                        <div class="koreksi-edit d-none">
+                                            <textarea class="form-control koreksi-text" rows="2" 
+                                                name="koreksi[{{ $doc->id }}]">{{ $isKoreksi ? str_replace('[KOREKSI] ', '', $doc->catatan) : '' }}</textarea>
+                                            <button type="button" class="btn btn-outline-danger btn-sm koreksi-cancel mt-2">Batal</button>
+                                        </div>
+                                    </div>
+                                    @if($isKoreksi)
+                                        <div class="mt-1 p-2 rounded" style="background:#fff3cd; font-size:11.5px; color:#b45309;">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                            {{ str_replace('[KOREKSI] ', '', $doc->catatan) }}
+                                        </div>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
-          </div>
-          <br />
+            <br />
 
           <div class="bg-white p-4 rounded-4">
             <h5 class="fw-bold mb-4">Keputusan Verifikasi SKP</h5>

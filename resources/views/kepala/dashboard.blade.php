@@ -64,6 +64,17 @@
         </div>
 
         <div id="table-wrapper">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">Riwayat Pengajuan SKP</h5>
+
+                {{-- Tombol export, hanya muncul di tab selesai --}}
+                <a id="btn-export-pdf"
+                    href="{{ route('kepala.export.pdf', ['bulan' => $bulanDipilih, 'tahun' => $tahunDipilih]) }}"
+                    class="btn btn-sm d-none"
+                    style="background:#1D9E75; color:#fff; border-radius:8px; font-size:13px; padding:7px 16px; display:inline-flex; align-items:center; gap:6px;">
+                    <i class="bi bi-file-earmark-arrow-down"></i> Export PDF
+                </a>
+            </div>
             <table class="table align-middle status-table rm-table" data-status="ttd">
                 <thead>
                     <tr>
@@ -165,6 +176,34 @@ document.getElementById('searchInput').addEventListener('keyup', function() {
     let filter = this.value.toLowerCase();
     document.querySelectorAll('.status-table:not(.d-none) tbody tr').forEach(function(row) {
         row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
+    });
+});
+document.addEventListener('DOMContentLoaded', function() {
+    const cards   = document.querySelectorAll('.status-card');
+    const tables  = document.querySelectorAll('.status-table');
+    const btnExport = document.getElementById('btn-export-pdf');
+
+    function activateStatus(status) {
+        cards.forEach(c => c.classList.remove('active'));
+        tables.forEach(t => t.classList.add('d-none'));
+
+        document.querySelector(`.status-card[data-status="${status}"]`)
+            ?.classList.add('active');
+        document.querySelector(`.status-table[data-status="${status}"]`)
+            ?.classList.remove('d-none');
+
+        // Tampilkan tombol export hanya di tab selesai
+        if (btnExport) {
+            btnExport.style.display = (status === 'selesai') ? 'inline-flex' : 'none';
+        }
+    }
+
+    activateStatus('ttd'); // default tab
+
+    cards.forEach(card => {
+        card.addEventListener('click', function() {
+            activateStatus(this.dataset.status);
+        });
     });
 });
 </script>@endsection

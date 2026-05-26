@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Digital SKP | @yield('title', 'Dashboard')</title>
+    <title>SIGMA RM | @yield('title', 'Dashboard')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     
     <!-- Bootstrap CSS -->
