@@ -6,27 +6,18 @@
 <div class="content">
     <h3 class="fw-bold mb-4">Dashboard</h3>
 
-<form action="{{ url()->current() }}" method="GET" class="d-flex gap-3 mb-4">
-
-    <input type="hidden" name="status" id="statusInput" value="{{ request('status', 'ttd') }}">
-
-    <select name="bulan" class="form-select w-auto" onchange="this.form.submit()">
-        @foreach(['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'] as $m)
-            <option value="{{ $m }}" {{ $bulanDipilih == $m ? 'selected' : '' }}>
-                {{ $m }}
-            </option>
-        @endforeach
-    </select>
-
-    <select name="tahun" class="form-select w-auto" onchange="this.form.submit()">
-        @for($y = date('Y'); $y >= 2024; $y--)
-            <option value="{{ $y }}" {{ $tahunDipilih == $y ? 'selected' : '' }}>
-                {{ $y }}
-            </option>
-        @endfor
-    </select>
-
-</form>
+    <form action="{{ url()->current() }}" method="GET" class="d-flex gap-3 mb-4">
+        <select name="bulan" class="form-select w-auto" onchange="this.form.submit()">
+            @foreach(['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'] as $m)
+                <option value="{{ $m }}" {{ $bulanDipilih == $m ? 'selected' : '' }}>{{ $m }}</option>
+            @endforeach
+        </select>
+        <select name="tahun" class="form-select w-auto" onchange="this.form.submit()">
+            @for($y = date('Y'); $y >= 2024; $y--)
+                <option value="{{ $y }}" {{ $tahunDipilih == $y ? 'selected' : '' }}>{{ $y }}</option>
+            @endfor
+        </select>
+    </form>
 
     <div class="row g-4 mb-5">
         <div class="col-md-3">
@@ -40,7 +31,6 @@
                 </div>
             </div>
         </div>
-
         <div class="col-md-3">
             <div class="card-status status-card rm-card" data-status="selesai" style="cursor: pointer;">
                 <div>
@@ -57,153 +47,120 @@
     <div class="bg-white p-4 rounded-4 shadow-sm">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold mb-0">Riwayat Pengajuan SKP</h5>
-            <div class="input-group" style="width: 280px">
-                {{-- <input type="text" id="searchInput" class="form-control" placeholder="Cari nama pegawai..."> --}}
-                {{-- <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span> --}}
-            </div>
+            <a id="btn-export-pdf"
+                href="{{ route('kepala.export.pdf', ['bulan' => $bulanDipilih, 'tahun' => $tahunDipilih]) }}"
+                class="btn btn-sm d-none"
+                style="background:#1D9E75; color:#fff; border-radius:8px; font-size:13px; padding:7px 16px; display:none; align-items:center; gap:6px;">
+                <i class="bi bi-file-earmark-arrow-down"></i> Export PDF
+            </a>
         </div>
 
-        <div id="table-wrapper">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0">Riwayat Pengajuan SKP</h5>
-
-                {{-- Tombol export, hanya muncul di tab selesai --}}
-                <a id="btn-export-pdf"
-                    href="{{ route('kepala.export.pdf', ['bulan' => $bulanDipilih, 'tahun' => $tahunDipilih]) }}"
-                    class="btn btn-sm d-none"
-                    style="background:#1D9E75; color:#fff; border-radius:8px; font-size:13px; padding:7px 16px; display:inline-flex; align-items:center; gap:6px;">
-                    <i class="bi bi-file-earmark-arrow-down"></i> Export PDF
-                </a>
-            </div>
-            <table class="table align-middle status-table rm-table" data-status="ttd">
-                <thead>
+        {{-- Tabel Menunggu TTD --}}
+        <table class="table align-middle status-table rm-table" data-status="ttd">
+            <thead>
+                <tr>
+                    <th>Nama Pegawai</th>
+                    <th>Bulan</th>
+                    <th>Tahun</th>
+                    <th>Tanggal Pengajuan</th>
+                    <th>Status</th>
+                    <th class="text-end">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($allData->where('status', 'menungguttd') as $item)
                     <tr>
-                        <th>Nama Pegawai</th>
-                        <th>Bulan</th>
-                        <th>Tahun</th>
-                        <th>Tanggal Pengajuan</th>
-                        <th>Status</th>
-                        <th class="text-end">Aksi</th>
+                        <td>{{ $item->user->nama ?? 'User' }}</td>
+                        <td>{{ $item->bulan }}</td>
+                        <td>{{ $item->tahun }}</td>
+                        <td>{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d-m-Y') }}</td>
+                        <td><span class="badge-status badge-ttd">Menunggu TTD</span></td>
+                        <td class="text-end">
+                            <a class="btn btn-outline-success btn-sm"
+                               href="{{ route('skp.show.detail', $item->id) }}">
+                                <i class="bi bi-qr-code"></i> Tanda Tangani
+                            </a>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    @forelse($allData->where('status', 'menungguttd') as $item)
-                        <tr>
-                            <td>{{ $item->user->nama ?? 'User' }}</td>
-                            <td>{{ $item->bulan }}</td>
-                            <td>{{ $item->tahun }}</td>
-                            <td>{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d-m-Y') }}</td>
-                            <td><span class="badge-status badge-ttd">Menunggu TTD</span></td>
-                            <td class="text-end">
-                                <a class="btn btn-outline-success btn-sm" href="{{ route('skp.show.detail', $item->id) }}">
-                                    <i class="bi bi-qr-code"></i> Tanda Tangani
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="6" class="text-center py-4">Tidak ada data menunggu TTD</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-
-            <table class="table align-middle status-table rm-table d-none" data-status="selesai">
-                <thead>
+                @empty
                     <tr>
-                        <th>Nama Pegawai</th>
-                        <th>Bulan</th>
-                        <th>Tahun</th>
-                        <th>Tanggal Pengajuan</th>
-                        <th>Status</th>
-                        <th class="text-end">Aksi</th>
+                        <td colspan="6" class="text-center py-4 text-muted">Tidak ada data menunggu TTD</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @forelse($allData->where('status', 'selesai') as $item)
-                        <tr>
-                            <td>{{ $item->user->nama ?? 'User' }}</td>
-                            <td>{{ $item->bulan }}</td>
-                            <td>{{ $item->tahun }}</td>
-                            <td>{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d-m-Y') }}</td>
-                            <td><span class="badge-status badge-selesai">Selesai</span></td>
-                            <td class="text-end">
-                              <a class="btn btn-success btn-sm rounded-pill"
-                                href="{{ route('skp.showskpdone', $item->id) }}">
-                                <i class="bi bi-file-earmark-text"></i>Lihat SKP Final
-                              </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="6" class="text-center py-4">Tidak ada data selesai</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                @endforelse
+            </tbody>
+        </table>
+
+        {{-- Tabel Selesai --}}
+        <table class="table align-middle status-table rm-table d-none" data-status="selesai">
+            <thead>
+                <tr>
+                    <th>Nama Pegawai</th>
+                    <th>Bulan</th>
+                    <th>Tahun</th>
+                    <th>Tanggal Pengajuan</th>
+                    <th>Status</th>
+                    <th class="text-end">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($allData->where('status', 'selesai') as $item)
+                    <tr>
+                        <td>{{ $item->user->nama ?? 'User' }}</td>
+                        <td>{{ $item->bulan }}</td>
+                        <td>{{ $item->tahun }}</td>
+                        <td>{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d-m-Y') }}</td>
+                        <td><span class="badge-status badge-selesai">Selesai</span></td>
+                        <td class="text-end">
+                            <a class="btn btn-success btn-sm rounded-pill"
+                               href="{{ route('skp.showskpdone', $item->id) }}">
+                                <i class="bi bi-file-earmark-text"></i> Lihat SKP Final
+                            </a>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">Tidak ada data selesai</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const cards = document.querySelectorAll('.status-card');
-    const tables = document.querySelectorAll('.status-table');
-
-    function activateStatus(status) {
-
-        // reset semua card
-        cards.forEach(c => c.classList.remove('active'));
-
-        // reset semua table
-        tables.forEach(t => t.classList.add('d-none'));
-
-        // aktifkan yg dipilih
-        document.querySelector(`.status-card[data-status="${status}"]`)
-            ?.classList.add('active');
-
-        document.querySelector(`.status-table[data-status="${status}"]`)
-            ?.classList.remove('d-none');
-    }
-
-    // 🔥 default pertama kali load
-    activateStatus('ttd');
-
-    // klik event
-    cards.forEach(card => {
-        card.addEventListener('click', function() {
-            activateStatus(this.dataset.status);
-        });
-    });
-});
-document.getElementById('searchInput').addEventListener('keyup', function() {
-    let filter = this.value.toLowerCase();
-    document.querySelectorAll('.status-table:not(.d-none) tbody tr').forEach(function(row) {
-        row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
-    });
-});
-document.addEventListener('DOMContentLoaded', function() {
-    const cards   = document.querySelectorAll('.status-card');
-    const tables  = document.querySelectorAll('.status-table');
+document.addEventListener('DOMContentLoaded', function () {
+    const cards     = document.querySelectorAll('.rm-card');
+    const tables    = document.querySelectorAll('.rm-table');
     const btnExport = document.getElementById('btn-export-pdf');
 
     function activateStatus(status) {
         cards.forEach(c => c.classList.remove('active'));
         tables.forEach(t => t.classList.add('d-none'));
 
-        document.querySelector(`.status-card[data-status="${status}"]`)
+        document.querySelector(`.rm-card[data-status="${status}"]`)
             ?.classList.add('active');
-        document.querySelector(`.status-table[data-status="${status}"]`)
+        document.querySelector(`.rm-table[data-status="${status}"]`)
             ?.classList.remove('d-none');
 
-        // Tampilkan tombol export hanya di tab selesai
         if (btnExport) {
-            btnExport.style.display = (status === 'selesai') ? 'inline-flex' : 'none';
+            if (status === 'selesai') {
+                btnExport.style.display = 'inline-flex';
+                btnExport.classList.remove('d-none');
+            } else {
+                btnExport.style.display = 'none';
+                btnExport.classList.add('d-none');
+            }
         }
     }
 
-    activateStatus('ttd'); // default tab
+    activateStatus('ttd');
 
     cards.forEach(card => {
-        card.addEventListener('click', function() {
+        card.addEventListener('click', function () {
             activateStatus(this.dataset.status);
         });
     });
 });
-</script>@endsection
+</script>
+
+@endsection

@@ -136,14 +136,27 @@
                         <span class="text-muted">-</span>
                     @endif
                 </td>
+                {{-- Dokumen TTD --}}
                 <td class="text-center">
+                    {{-- Aktivitas Harian yang sudah TTD --}}
+                    @if($aktivitas && $aktivitas->url_signed && $aktivitas->url_signed !== '-')
+                        <a href="{{ asset('storage/'.$aktivitas->url_signed) }}" target="_blank"
+                        class="btn btn-success btn-sm text-white d-flex align-items-center gap-1">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                            <span style="font-size:11px;">Aktivitas</span>
+                        </a>
+                    @elseif($aktivitas)
+                        <span class="text-muted d-block" style="font-size:11px;">Aktivitas: -</span>
+                    @endif
+                    {{-- Laporan Realisasi yang sudah TTD --}}
                     @if($dok->url_signed && $dok->url_signed !== '-')
                         <a href="{{ asset('storage/'.$dok->url_signed) }}" target="_blank"
-                        class="btn btn-primary btn-sm text-white">
+                        class="btn btn-primary btn-sm text-white mb-1 d-flex align-items-center gap-1">
                             <i class="bi bi-file-earmark-pdf"></i>
+                            <span style="font-size:11px;">Laporan</span>
                         </a>
                     @else
-                        <span class="text-muted">-</span>
+                        <span class="text-muted d-block mb-1" style="font-size:11px;">Laporan: -</span>
                     @endif
                 </td>
             </tr>

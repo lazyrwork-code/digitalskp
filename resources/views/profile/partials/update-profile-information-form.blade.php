@@ -1,84 +1,97 @@
 <section>
-    <header>
-        <h5 class="fw-bold mb-1">Informasi Profil</h5>
-        <p class="text-muted small">
-            Perbarui data akun kamu.
-        </p>
-    </header>
+    @php
+    function formatNip($nip) {
+        $raw = preg_replace('/\D/', '', $nip ?? '');
+        if (strlen($raw) === 0) return '-';
+        $formatted = substr($raw, 0, 8);
+        if (strlen($raw) > 8)  $formatted .= ' ' . substr($raw, 8, 6);
+        if (strlen($raw) > 14) $formatted .= ' ' . substr($raw, 14, 1);
+        if (strlen($raw) > 15) $formatted .= ' ' . substr($raw, 15, 3);
+        return $formatted;
+    }
+    @endphp
+    <div class="page-header mb-4">
+        <div class="page-header-icon">
+            <i class="bi bi-person"></i>
+        </div>
+        <div>
+            <h5 class="fw-bold mb-0">Informasi Profil</h5>
+            <p class="text-muted small mb-0">Data akun kamu di sistem SIGMA RM</p>
+        </div>
+    </div>
 
-    <form method="post" action="{{ route('profile.update') }}" class="mt-4">
-        @csrf
-        @method('patch')
+    <div class="row g-3">
 
         {{-- Nama --}}
-        <div class="mb-3">
-            <label class="form-label">Nama Lengkap</label>
-            <input type="text"
-                   name="nama"
-                   value="{{ old('nama', auth()->user()->nama) }}"
-                   class="form-control @error('nama') is-invalid @enderror">
-
-            @error('nama')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-        </div>
-
-        {{-- Username --}}
-        <div class="mb-3">
-            <label class="form-label">Username</label>
-            <input type="text"
-                   name="username"
-                   value="{{ old('username', auth()->user()->username) }}"
-                   class="form-control @error('username') is-invalid @enderror">
-
-            @error('username')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-        </div>
-
-        {{-- Email --}}
-        <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input type="email"
-                   name="email"
-                   value="{{ old('email', auth()->user()->email) }}"
-                   class="form-control @error('email') is-invalid @enderror">
-
-            @error('email')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+        <div class="col-md-6">
+            <label class="form-label-custom">Nama Lengkap</label>
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                    <i class="bi bi-person text-muted"></i>
+                </span>
+                <input type="text"
+                       class="form-control border-start-0 ps-0 bg-light"
+                       value="{{ auth()->user()->nama }}"
+                       readonly>
+            </div>
         </div>
 
         {{-- NIP --}}
-        <div class="mb-3">
-            <label class="form-label">NIP</label>
-            <input type="text"
-                   name="nip"
-                   value="{{ old('nip', auth()->user()->nip) }}"
-                   class="form-control @error('nip') is-invalid @enderror">
+        <div class="col-md-6">
+            <label class="form-label-custom">NIP</label>
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                    <i class="bi bi-credit-card text-muted"></i>
+                </span>
+                <input type="text"
+                       class="form-control border-start-0 ps-0 bg-light"
+                       value="{{ formatNip(auth()->user()->nip) }}"
+                       readonly>
+            </div>
+        </div>
 
-            @error('nip')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+        {{-- Username --}}
+        <div class="col-md-6">
+            <label class="form-label-custom">Username</label>
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                    <i class="bi bi-at text-muted"></i>
+                </span>
+                <input type="text"
+                       class="form-control border-start-0 ps-0 bg-light"
+                       value="{{ auth()->user()->username }}"
+                       readonly>
+            </div>
+        </div>
+
+        {{-- Email --}}
+        <div class="col-md-6">
+            <label class="form-label-custom">Email</label>
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                    <i class="bi bi-envelope text-muted"></i>
+                </span>
+                <input type="text"
+                       class="form-control border-start-0 ps-0 bg-light"
+                       value="{{ auth()->user()->email }}"
+                       readonly>
+            </div>
         </div>
 
         {{-- Role --}}
-        <div class="mb-4">
-            <label class="form-label">Role</label>
-            <input type="text"
-                   value="{{ auth()->user()->role }}"
-                   class="form-control bg-light"
-                   readonly>
+        <div class="col-md-6">
+            <label class="form-label-custom">Role</label>
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                    <i class="bi bi-shield text-muted"></i>
+                </span>
+                <input type="text"
+                       class="form-control border-start-0 ps-0 bg-light"
+                       value="{{ ucfirst(auth()->user()->role) }}"
+                       readonly>
+            </div>
         </div>
 
-        <button class="btn btn-prima">
-            Simpan Perubahan
-        </button>
+    </div>
 
-        @if (session('status') === 'profile-updated')
-            <p class="text-success small mt-2">
-                Profil berhasil diperbarui.
-            </p>
-        @endif
-    </form>
 </section>

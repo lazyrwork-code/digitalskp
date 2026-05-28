@@ -3,10 +3,8 @@
 @section('title', 'Detail Perbaikan Pengajuan SKP')
 
 @section('content')
-    <!-- TITLE -->
     <h3 class="fw-bold mb-4">Detail Perbaikan Pengajuan SKP</h3>
 
-    <!-- FORM HEADER -->
     <form action="{{ route('skp.update', $skp->id) }}"
         method="POST"
         enctype="multipart/form-data"
@@ -19,47 +17,53 @@
         <div class="bg-white p-4 rounded-4 mb-4">
             <div class="row g-4">
                 <div class="col-md-6">
-                <label class="form-label small text-muted">Tanggal Pengajuan</label>
-                <input type="text" class="form-control" value="{{ $skp->tanggal_pengajuan->format('d/m/Y') }}" disabled />
+                    <label class="form-label small text-muted">Tanggal Pengajuan</label>
+                    <input type="text" class="form-control" value="{{ $skp->tanggal_pengajuan->format('d/m/Y') }}" disabled />
                 </div>
-
                 <div class="col-md-6">
-                <label class="form-label small text-muted">Bulan SKP</label>
-                <select class="form-select" >
-                    <option selected>{{ $skp->bulan }}</option>
-                </select>
+                    <label class="form-label small text-muted">Bulan SKP</label>
+                    <select class="form-select">
+                        <option selected>{{ $skp->bulan }}</option>
+                    </select>
                 </div>
-
                 <div class="col-md-6">
-                <label class="form-label small text-muted">Nama Pegawai</label>
-                <input type="text" class="form-control" value="{{ $skp->user->nama }}" disabled />
+                    <label class="form-label small text-muted">Nama Pegawai</label>
+                    <input type="text" class="form-control" value="{{ $skp->user->nama }}" disabled />
                 </div>
-
                 <div class="col-md-6">
-                <label class="form-label small text-muted">Tahun SKP</label>
-                <select class="form-select" >
-                    <option selected>{{ $skp->tahun }}</option>
-                </select>
+                    <label class="form-label small text-muted">Tahun SKP</label>
+                    <select class="form-select" disabled>
+                        <option selected>{{ $skp->tahun }}</option>
+                    </select>
                 </div>
-
                 <div class="col-md-6">
-                <label class="form-label small text-muted">Unit</label>
-                <select class="form-select" >
-                    <option selected>{{ $skp->unit }}</option>
-                </select>
+                    <label class="form-label small text-muted">Unit</label>
+                    <select class="form-select" disabled>
+                        <option selected>{{ $skp->unit }}</option>
+                    </select>
                 </div>
             </div>
         </div>
 
-        <!-- UPLOAD DOKUMEN -->
         <div class="bg-white p-4 rounded-4">
             <h5 class="fw-bold mb-3">Upload Dokumen SKP</h5>
 
             @php
-                $dokumenUtama = $skp->dokumen->filter(fn($d) => !str_starts_with($d->nama_file, 'Aktivitas Harian eMaster'));
+                $namaFix = [
+                    0 => 'Catatan Harian Kerja',
+                    1 => 'Laporan SKP 1',
+                    2 => 'Laporan SKP 2',
+                    3 => 'Laporan SKP 3',
+                    4 => 'Laporan SKP 4',
+                ];
+
+                $dokumenUtama = $skp->dokumen
+                    ->filter(fn($d) => !str_starts_with($d->nama_file, 'Aktivitas Harian eMaster'))
+                    ->values();
+
                 $dokumenAktivitas = $skp->dokumen
                     ->filter(fn($d) => str_starts_with($d->nama_file, 'Aktivitas Harian eMaster'))
-                    ->keyBy(fn($d) => trim(str_replace('Aktivitas Harian eMaster -', '', $d->nama_file)));
+                    ->values();
             @endphp
 
             <div class="table-responsive">
@@ -77,101 +81,118 @@
                     </thead>
                     <tbody>
                         @forelse($dokumenUtama as $i => $doc)
+                        @php
+                            $isKoreksi = str_starts_with($doc->nama_file ?? '', '[KOREKSI]');
+                            $judulKegiatan = $isKoreksi ? $doc->catatan : $doc->nama_file;
+                            $pesanKoreksi = $isKoreksi ? str_replace('[KOREKSI] ', '', $doc->nama_file) : '';
+                            $aktivitas = $i > 0 ? ($dokumenAktivitas[$i - 1] ?? null) : null;
+                        @endphp
                         <tr>
                             <td>{{ $loop->iteration }}</td>
 
+                            {{-- Nama Dokumen hardcode --}}
                             <td>
-                                {{ $doc->nama_file }}
+                                <strong>{{ $namaFix[$i] ?? 'Dokumen' }}</strong>
                                 <div class="small text-muted">Dokumen PDF</div>
                             </td>
 
-                            {{-- JUDUL LAPORAN --}}
+                            {{-- Kegiatan Tugas Jabatan --}}
                             <td>
-                                <input type="text"
-                                    class="form-control form-control-sm"
-                                    name="judul_laporan[{{ $doc->id }}]"
-                                    value="{{ $doc->nama_file }}"
-                                    {{ $doc->catatan && $doc->catatan !== '-' ? '' : 'disabled' }}>
+                                @if($isKoreksi)
+                                    <input type="text"
+                                        class="form-control form-control-sm"
+                                        name="judul_laporan[{{ $doc->id }}]"
+                                        value="{{ $judulKegiatan }}">
+                                @else
+                                    <input type="text"
+                                        class="form-control form-control-sm"
+                                        value="{{ $judulKegiatan }}"
+                                        disabled>
+                                @endif
                             </td>
 
-                            {{-- LINK BUKTI --}}
+                            {{-- Link Bukti Dukung --}}
                             <td class="text-center">
-                                @if($doc->catatan && $doc->catatan !== '-')
+                                @if($isKoreksi)
                                     <input type="text"
                                         class="form-control form-control-sm"
                                         name="link_pendukung[{{ $doc->id }}]"
                                         value="{{ $doc->link_pendukung }}">
                                 @else
-                                    <a href="{{ $doc->link_pendukung }}" target="_blank"
-                                    class="btn btn-info btn-sm text-white">
-                                        <i class="bi bi-file-medical"></i>
-                                    </a>
+                                    @if($doc->link_pendukung && $doc->link_pendukung !== '-')
+                                        <a href="{{ $doc->link_pendukung }}" target="_blank"
+                                           class="btn btn-info btn-sm text-white">
+                                            <i class="bi bi-file-medical"></i>
+                                        </a>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
                                 @endif
                             </td>
 
-                            {{-- KOREKSI --}}
+                            {{-- Keterangan Koreksi --}}
                             <td>
-                                @if($doc->catatan && $doc->catatan !== '-')
-                                    <textarea class="form-control form-control-sm" rows="2" disabled>{{ $doc->catatan }}</textarea>
+                                @if($isKoreksi)
+                                    <textarea class="form-control form-control-sm"
+                                        rows="2" disabled>{{ $pesanKoreksi }}</textarea>
                                 @else
                                     <span class="text-muted small">-</span>
                                 @endif
                             </td>
 
-                            {{-- AKTIVITAS HARIAN --}}
+                            {{-- Aktivitas Harian --}}
                             <td class="text-center">
-                                @php $aktivitas = $dokumenAktivitas[$doc->nama_file] ?? null; @endphp
                                 @if($aktivitas)
-                                    @if($doc->catatan && $doc->catatan !== '-')
+                                    @if($isKoreksi)
                                         <label class="btn btn-warning btn-sm text-white me-1 mb-0">
-                                            <template x-if="!dokumenList[{{ $loop->index }}].aktivitasLoading">
+                                            <template x-if="!dokumenList[{{ $i }}].aktivitasLoading">
                                                 <span><i class="bi bi-pencil"></i> Ubah</span>
                                             </template>
-                                            <template x-if="dokumenList[{{ $loop->index }}].aktivitasLoading">
+                                            <template x-if="dokumenList[{{ $i }}].aktivitasLoading">
                                                 <span><span class="spinner-border spinner-border-sm"></span> Uploading...</span>
                                             </template>
                                             <input type="file" hidden
-                                                @change="handleFileUpload($event, {{ $loop->index }}, {{ $aktivitas->id }}, 'aktivitas')">
+                                                @change="handleFileUpload($event, {{ $i }}, {{ $aktivitas->id }}, 'aktivitas')">
                                         </label>
                                         <input type="hidden"
                                             :name="'dokumen[{{ $aktivitas->id }}][path]'"
-                                            x-model="dokumenList[{{ $loop->index }}].aktivitasPath">
+                                            x-model="dokumenList[{{ $i }}].aktivitasPath">
                                     @endif
-                                    <a :href="dokumenList[{{ $loop->index }}]?.aktivitasUploaded ? dokumenList[{{ $loop->index }}].aktivitasUrl : '{{ asset('storage/' . $aktivitas->url) }}'"
-                                    target="_blank"
-                                    class="btn btn-sm"
-                                    :class="dokumenList[{{ $loop->index }}]?.aktivitasUploaded ? 'btn-success text-white' : 'btn-outline-primary'">
+                                    <a :href="dokumenList[{{ $i }}]?.aktivitasUploaded ? dokumenList[{{ $i }}].aktivitasUrl : '{{ asset('storage/' . $aktivitas->url) }}'"
+                                       target="_blank"
+                                       class="btn btn-sm"
+                                       :class="dokumenList[{{ $i }}]?.aktivitasUploaded ? 'btn-success text-white' : 'btn-outline-primary'">
                                         <i class="bi bi-eye"></i>
-                                        <span x-text="dokumenList[{{ $loop->index }}]?.aktivitasUploaded ? 'Lihat (Baru)' : 'Lihat'"></span>
+                                        <span x-text="dokumenList[{{ $i }}]?.aktivitasUploaded ? 'Lihat (Baru)' : 'Lihat'"></span>
                                     </a>
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
                             </td>
 
-                            {{-- LAPORAN REALISASI --}}
+                            {{-- Laporan Realisasi --}}
                             <td class="text-center">
-                                @if($doc->catatan && $doc->catatan !== '-')
+                                @if($isKoreksi)
                                     <label class="btn btn-warning btn-sm text-white me-1 mb-0">
-                                        <template x-if="!dokumenList[{{ $loop->index }}].isLoading">
+                                        <template x-if="!dokumenList[{{ $i }}].isLoading">
                                             <span><i class="bi bi-pencil"></i> Ubah</span>
                                         </template>
-                                        <template x-if="dokumenList[{{ $loop->index }}].isLoading">
+                                        <template x-if="dokumenList[{{ $i }}].isLoading">
                                             <span><span class="spinner-border spinner-border-sm"></span> Uploading...</span>
                                         </template>
                                         <input type="file" hidden
-                                            @change="handleFileUpload($event, {{ $loop->index }}, {{ $doc->id }}, 'utama')">
+                                            @change="handleFileUpload($event, {{ $i }}, {{ $doc->id }}, 'utama')">
                                     </label>
                                     <input type="hidden"
                                         :name="'dokumen[{{ $doc->id }}][path]'"
-                                        x-model="dokumenList[{{ $loop->index }}].savedPath">
+                                        x-model="dokumenList[{{ $i }}].savedPath">
                                 @endif
-                                <a :href="dokumenList[{{ $loop->index }}]?.isUploaded ? dokumenList[{{ $loop->index }}].fileUrl : '{{ asset('storage/' . $doc->url) }}'"
-                                target="_blank"
-                                class="btn btn-sm"
-                                :class="dokumenList[{{ $loop->index }}]?.isUploaded ? 'btn-success text-white' : 'btn-outline-primary'">
+                                <a :href="dokumenList[{{ $i }}]?.isUploaded ? dokumenList[{{ $i }}].fileUrl : '{{ asset('storage/' . $doc->url) }}'"
+                                   target="_blank"
+                                   class="btn btn-sm"
+                                   :class="dokumenList[{{ $i }}]?.isUploaded ? 'btn-success text-white' : 'btn-outline-primary'">
                                     <i class="bi bi-eye"></i>
-                                    <span x-text="dokumenList[{{ $loop->index }}]?.isUploaded ? 'Lihat (Baru)' : 'Lihat'"></span>
+                                    <span x-text="dokumenList[{{ $i }}]?.isUploaded ? 'Lihat (Baru)' : 'Lihat'"></span>
                                 </a>
                             </td>
                         </tr>
@@ -193,7 +214,8 @@
                 </button>
             </div>
         </div>
-    </form>  
+    </form>
+
 @endsection
 <script>
 function skpUpload() {

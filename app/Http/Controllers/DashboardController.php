@@ -20,7 +20,6 @@ class DashboardController extends Controller
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
         ];
         
-        // Ambil input filter atau default ke bulan/tahun sekarang
         $bulanDipilih = $request->get('bulan', $bulanIndo[(int)date('m')]); 
         $tahunDipilih = $request->get('tahun', date('Y'));
 
@@ -30,14 +29,12 @@ class DashboardController extends Controller
         }
 
         $allData = (clone $baseQuery)->with('user')
-        ->whereIn('status', ['verifikasi', 'perbaikan', 'menungguttd','selesai'])
-        ->where('tahun', $tahunDipilih)
-        ->whereRaw('TRIM(bulan) = ?', [$bulanDipilih])
-        ->when($user->role === 'pegawai', fn($q) => $q->latest(), fn($q) => $q->oldest())
-        ->get();
+            ->whereIn('status', ['verifikasi', 'perbaikan', 'menungguttd', 'selesai'])
+            ->where('tahun', $tahunDipilih)
+            ->whereRaw('TRIM(bulan) = ?', [$bulanDipilih])
+            ->when($user->role === 'pegawai', fn($q) => $q->latest(), fn($q) => $q->oldest())
+            ->get();
         
-        // Hitung counts berdasarkan data yang SUDAH ditarik ($allData)
-        // Supaya angka di kartu SAMA dengan jumlah data di tabel
         $counts = [
             'verifikasi' => $allData->where('status', 'verifikasi')->count(),
             'perbaikan'  => $allData->where('status', 'perbaikan')->count(),
@@ -49,12 +46,14 @@ class DashboardController extends Controller
 
         return view($view, compact('counts', 'allData', 'bulanDipilih', 'tahunDipilih', 'bulanIndo'));
     }
+
     public function show($id)
     {
         $skp = SkpPengajuan::with('user')->findOrFail($id);
         $dokumen = SkpDokumen::where('skp_id', $id)->get();
         return view('admin.verifikasi-skp', compact('skp', 'dokumen'));
     }
+
     public function showfinish($id)
     {
         $skp = SkpPengajuan::with('user')->findOrFail($id);
@@ -66,7 +65,7 @@ class DashboardController extends Controller
     {
         $request->validate([
             'status_baru' => 'required|in:perbaikan,menungguttd',
-            'koreksi' => 'nullable|array',
+            'koreksi'     => 'nullable|array',
         ]);
 
         $skp = SkpPengajuan::findOrFail($id);
@@ -78,19 +77,33 @@ class DashboardController extends Controller
                 if (!empty($pesan)) {
                     $dokumen = SkpDokumen::find($docId);
                     if ($dokumen) {
-                        $dokumen->update(['nama_file' => '[KOREKSI] ' . $pesan]);
+                        // Simpan judul asli ke catatan sebelum ditimpa koreksi
+                        $judulAsli = str_starts_with($dokumen->nama_file ?? '', '[KOREKSI]')
+                            ? $dokumen->catatan
+                            : $dokumen->nama_file;
 
-                        // Aktivitas harian pasangannya
-                        // Ambil berdasarkan urutan index di skp yang sama
+                        $dokumen->update([
+                            'nama_file' => '[KOREKSI] ' . $pesan,
+                            'catatan'   => $judulAsli,
+                        ]);
+
+                        // Update aktivitas harian pasangannya
                         $allDokumen = SkpDokumen::where('skp_id', $id)->get();
                         $utamaList = $allDokumen->filter(fn($d) => $d->catatan !== 'aktivitas_harian')->values();
                         $aktivitasList = $allDokumen->filter(fn($d) => $d->catatan === 'aktivitas_harian')->values();
-                        
+
                         $utamaIndex = $utamaList->search(fn($d) => $d->id === $dokumen->id);
-                        if ($utamaIndex > 0) { // index 0 = catatan harian, tidak punya aktivitas
+                        if ($utamaIndex > 0) {
                             $aktivitas = $aktivitasList[$utamaIndex - 1] ?? null;
                             if ($aktivitas) {
-                                $aktivitas->update(['nama_file' => '[KOREKSI] ' . $pesan]);
+                                $judulAsliAkt = str_starts_with($aktivitas->nama_file ?? '', '[KOREKSI]')
+                                    ? $aktivitas->catatan
+                                    : $aktivitas->nama_file;
+
+                                $aktivitas->update([
+                                    'nama_file' => '[KOREKSI] ' . $pesan,
+                                    'catatan'   => $judulAsliAkt,
+                                ]);
                             }
                         }
                     }
@@ -99,18 +112,20 @@ class DashboardController extends Controller
         }
 
         if ($request->status_baru == 'menungguttd') {
-            // Hanya reset yang berisi koreksi, biarkan judul kegiatan tetap
-            $dokumenList = SkpDokumen::where('skp_id', $id)->get();
-            foreach ($dokumenList as $dok) {
-                if (str_starts_with($dok->catatan, '[KOREKSI]')) {
-                    // Ambil judul asli dari nama_file sebagai fallback
-                    $dok->update(['catatan' => $dok->nama_file]);
-                }
-            }
+            SkpDokumen::where('skp_id', $id)
+                ->get()
+                ->each(function($dok) {
+                    if (str_starts_with($dok->nama_file ?? '', '[KOREKSI]')) {
+                        $dok->update([
+                            'nama_file' => $dok->catatan, // restore judul asli
+                            'catatan'   => 'utama',
+                        ]);
+                    }
+                });
         }
 
-        $pesanFlash = ($request->status_baru == 'perbaikan') 
-            ? 'SKP dikembalikan. Catatan koreksi telah dikirim ke tiap dokumen.' 
+        $pesanFlash = ($request->status_baru == 'perbaikan')
+            ? 'SKP dikembalikan. Catatan koreksi telah dikirim.'
             : 'SKP berhasil disetujui.';
 
         return redirect()->route('admin.dashboard')->with('success', $pesanFlash);
@@ -129,20 +144,13 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
-        // Pakai blade view lalu convert ke PDF pakai FPDF
-        $html = View::make('exports.skp-selesai-pdf', compact('data', 'bulan', 'tahun'))->render();
-
-        // Karena FPDF tidak support HTML, kita pakai response download blade as PDF
-        // Lebih simpel: gunakan dompdf via stream — tapi karena tidak ada dompdf,
-        // kita return blade dengan CSS print dan trigger window.print() via JS
-        // ATAU pakai FPDF murni seperti di bawah:
+        // $html = View::make('exports.skp-selesai-pdf', compact('data', 'bulan', 'tahun'))->render();
 
         $pdf = new \setasign\Fpdi\Fpdi();
-        $pdf->AddPage('L'); // Landscape
+        $pdf->AddPage('L');
         $pdf->SetFont('Helvetica', 'B', 14);
-        $pdf->SetFillColor(29, 158, 117); // Hijau brand
+        $pdf->SetFillColor(29, 158, 117);
 
-        // ===== HEADER =====
         $pdf->SetTextColor(255, 255, 255);
         $pdf->Cell(0, 12, 'REKAP SKP SELESAI - RSUD DR. SOETOMO', 0, 1, 'C', true);
         $pdf->SetFont('Helvetica', '', 10);
@@ -150,7 +158,6 @@ class DashboardController extends Controller
         $pdf->Cell(0, 7, 'Periode: ' . $bulan . ' ' . $tahun, 0, 1, 'C');
         $pdf->Ln(4);
 
-        // ===== THEAD =====
         $pdf->SetFont('Helvetica', 'B', 9);
         $pdf->SetFillColor(243, 244, 246);
         $pdf->SetTextColor(55, 65, 81);
@@ -165,7 +172,6 @@ class DashboardController extends Controller
         $pdf->Cell(45,  9, 'Tanggal Selesai', 1, 0, 'C', true);
         $pdf->Cell(37,  9, 'Status',          1, 1, 'C', true);
 
-        // ===== TBODY =====
         $pdf->SetFont('Helvetica', '', 9);
         $pdf->SetTextColor(17, 24, 39);
         $no = 1;
@@ -173,25 +179,23 @@ class DashboardController extends Controller
             $fill = ($no % 2 === 0);
             $pdf->SetFillColor(249, 250, 251);
 
-            $pdf->Cell(10,  8, $no,                                                    1, 0, 'C', $fill);
-            $pdf->Cell(65,  8, $item->user->nama ?? '-',                               1, 0, 'L', $fill);
-            $pdf->Cell(60,  8, $item->unit ?? '-',                                     1, 0, 'L', $fill);
-            $pdf->Cell(30,  8, $item->bulan,                                           1, 0, 'C', $fill);
-            $pdf->Cell(20,  8, $item->tahun,                                           1, 0, 'C', $fill);
+            $pdf->Cell(10,  8, $no,                                                              1, 0, 'C', $fill);
+            $pdf->Cell(65,  8, $item->user->nama ?? '-',                                         1, 0, 'L', $fill);
+            $pdf->Cell(60,  8, $item->unit ?? '-',                                               1, 0, 'L', $fill);
+            $pdf->Cell(30,  8, $item->bulan,                                                     1, 0, 'C', $fill);
+            $pdf->Cell(20,  8, $item->tahun,                                                     1, 0, 'C', $fill);
             $pdf->Cell(45,  8, \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d-m-Y'), 1, 0, 'C', $fill);
-            $pdf->Cell(37,  8, 'Selesai',                                              1, 1, 'C', $fill);
+            $pdf->Cell(37,  8, 'Selesai',                                                        1, 1, 'C', $fill);
             $no++;
         }
 
-        // ===== FOOTER =====
         $pdf->Ln(6);
         $pdf->SetFont('Helvetica', 'I', 8);
         $pdf->SetTextColor(156, 163, 175);
         $pdf->Cell(0, 6, 'Dicetak oleh: ' . auth()->user()->nama . ' | ' . now()->format('d-m-Y H:i'), 0, 0, 'R');
 
         $filename = 'rekap-skp-selesai-' . $bulan . '-' . $tahun . '.pdf';
-        $pdf->Output('D', $filename); // D = force download
+        $pdf->Output('D', $filename);
         exit;
     }
-
 }

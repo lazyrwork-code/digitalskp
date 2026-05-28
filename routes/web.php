@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SkpPengajuanController;
 use App\Http\Controllers\SkpVerifikasiController;
 use App\Http\Controllers\VerifikasiTtdController;
+use App\Http\Controllers\UserController;
 
 Route::get('/', function () {
     return auth()->check()
@@ -25,7 +26,7 @@ Route::get('/redirect-role', function () {
 })->middleware('auth')->name('redirect.role');
 
 Route::middleware('auth')->group(function () {
-
+    Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
     // ======================
     // UMUM
     // ======================
@@ -91,6 +92,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/skp/riwayat', [SkpPengajuanController::class, 'indexKepala'])->name('kepala.riwayat');
         Route::get('/skp/riwayat/{id_user}', [SkpPengajuanController::class, 'indexDetail'])->name('kepala.riwayat-user');
         Route::get('/export-pdf', [DashboardController::class, 'exportPdf'])->name('kepala.export.pdf');
+
+        Route::get('/kelola-user', [UserController::class, 'index'])->name('kepala.user.index');
+        Route::get('/kelola-user/tambah', [UserController::class, 'create'])->name('kepala.user.create');
+        Route::post('/kelola-user', [UserController::class, 'store'])->name('kepala.user.store');
+        Route::get('/kelola-user/{id}/edit', [UserController::class, 'edit'])->name('kepala.user.edit');
+        Route::put('/kelola-user/{id}', [UserController::class, 'update'])->name('kepala.user.update');
+        Route::delete('/kelola-user/{id}', [UserController::class, 'destroy'])->name('kepala.user.destroy');
     });
 });
 

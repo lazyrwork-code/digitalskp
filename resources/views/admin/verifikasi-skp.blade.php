@@ -43,13 +43,6 @@
         <div class="bg-white p-4 rounded-4">
             <h5 class="fw-bold mb-3">Dokumen SKP</h5>
 
-            @php
-                $dokumenUtama = collect($dokumen)->filter(fn($d) => !str_starts_with($d->nama_file, 'Aktivitas Harian eMaster'));
-                $dokumenAktivitas = collect($dokumen)
-                    ->filter(fn($d) => str_starts_with($d->nama_file, 'Aktivitas Harian eMaster'))
-                    ->keyBy(fn($d) => trim(str_replace('Aktivitas Harian eMaster -', '', $d->nama_file)));
-            @endphp
-
             <div class="table-responsive">
                 <table class="table align-middle">
                     <thead>
@@ -74,11 +67,11 @@
                             ];
 
                             $dokumenUtama = collect($dokumen)
-                                ->filter(fn($d) => $d->catatan !== 'aktivitas_harian' && !str_starts_with($d->catatan ?? '', '[KOREKSI_AKT]'))
+                                ->filter(fn($d) => !str_starts_with($d->nama_file ?? '', 'Aktivitas Harian eMaster'))
                                 ->values();
 
                             $dokumenAktivitas = collect($dokumen)
-                                ->filter(fn($d) => $d->catatan === 'aktivitas_harian')
+                                ->filter(fn($d) => str_starts_with($d->nama_file ?? '', 'Aktivitas Harian eMaster'))
                                 ->values();
                         @endphp
                         @forelse($dokumenUtama as $i => $doc)
@@ -91,10 +84,20 @@
                                 <div class="small text-muted">Dokumen PDF</div>
                             </td>
 
-                            {{-- Kegiatan Tugas Jabatan dari nama_file --}}
+                            {{-- Kegiatan Tugas Jabatan --}}
                             <td>
+                                @php
+                                    $isKoreksi = str_starts_with($doc->nama_file ?? '', '[KOREKSI]');
+                                    $judulKegiatan = $isKoreksi ? $doc->catatan : $doc->nama_file;
+                                @endphp
                                 <input type="text" class="form-control form-control-sm"
-                                    value="{{ $doc->nama_file }}" disabled />
+                                    value="{{ $judulKegiatan }}" disabled />
+                                @if($isKoreksi)
+                                    <div class="mt-1 p-2 rounded" style="background:#fff3cd; font-size:11.5px; color:#b45309;">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                        {{ str_replace('[KOREKSI] ', '', $doc->nama_file) }}
+                                    </div>
+                                @endif
                             </td>
 
                             <td class="text-center">
@@ -137,7 +140,7 @@
                                     </button>
                                     <div class="koreksi-edit d-none">
                                         <textarea class="form-control koreksi-text" rows="2"
-                                            name="koreksi[{{ $doc->id }}]"></textarea>
+                                            name="koreksi[{{ $doc->id }}]">{{ $isKoreksi ? str_replace('[KOREKSI] ', '', $doc->nama_file) : '' }}</textarea>
                                         <button type="button" class="btn btn-outline-danger btn-sm koreksi-cancel mt-2">Batal</button>
                                     </div>
                                 </div>

@@ -5,7 +5,28 @@
 
     <div class="dropdown">
         <button class="btn btn-light d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
-            <img src="https://i.pravatar.cc/40" class="rounded-circle" width="36" height="36">
+            
+            {{-- Avatar Inisial --}}
+            @php
+                $nama = auth()->user()->nama;
+                $kata = explode(' ', trim($nama));
+                $inisial = strtoupper(substr($kata[0], 0, 1));
+                if (count($kata) > 1) $inisial .= strtoupper(substr($kata[1], 0, 1));
+            @endphp
+            <div style="
+                width: 36px; height: 36px;
+                border-radius: 50%;
+                background: #1D9E75;
+                color: #fff;
+                font-size: 13px;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+                letter-spacing: 0.5px;
+            ">{{ $inisial }}</div>
+
             <div class="text-start d-none d-md-block">
                 <div class="fw-semibold">{{ auth()->user()->nama }}</div>
                 <small class="text-muted">{{ ucfirst(auth()->user()->role) }}</small>
